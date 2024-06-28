@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marquer Controller Application</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="header">
+        <div class="title">
+            <p>Preset Name/New preset</p>
+        </div>
+        <div class="nav">
+            <a href="marq_creater page.html" class="blueBox">Presets</a>
+        </div>
+    </div>
+    <div class="main">
+        <div class="creator-page">
+            <h2>Create Route</h2>
+            <p id="red">Only one of these fields can be filled once</p>
+            <div class="input-group">
+                <select id="movement-type">
+                    <option value="move">Move</option>
+                    <option value="turn-left">Turn Left</option>
+                    <option value="turn-right">Turn Right</option>
+                </select>
+                <input type="text" id="distance" placeholder="Distance (cm)">
+                <button id="add-step">+</button>
+            </div>
+            <div class="step-list">
+                <h3>Step list</h3>
+                <ul id="steps"></ul>
+            </div>
+            <div class="preset-actions">
+                <button id="save-preset">Save Preset</button>
+                <button id="clear-steps">Clear Steps</button>
+            </div>
+            <div class="presets">
+                <h3>Presets</h3>
+                <ul id="presets-list">
+                    <!-- Preset items will be inserted here -->
+                </ul>
+            </div>
+        </div>
+        <div class="preview-route">
+            <h2>Preview Route</h2>
+            <canvas id="previewCanvas" width="400" height="400"></canvas>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

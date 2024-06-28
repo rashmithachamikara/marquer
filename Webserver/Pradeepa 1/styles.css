@@ -1,0 +1,97 @@
+body
+{
+   background-color: pink;
+   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+   text-decoration: none;
+}
+.t
+{
+    display:flex;
+}
+.t1
+{
+   margin-inline-start: 200px;
+   margin-right:30px;
+}
+.t2
+{
+    margin:30px;
+}
+.textBox
+{
+    border: 3px solid rgb(47, 47, 190);
+    background-color: aqua;
+    padding:8px;
+    width:220px;
+    font-size: 18px;
+}
+.bluebox
+{
+    background-color: rgb(51, 148, 221);
+    border: 3px solid rgb(47, 152, 190);
+    padding:5px;
+    text-decoration: none;
+    padding:8px 38px ;
+    width:200px;
+    font-size: 18px;
+}
+.main
+{
+    background-color: paleturquoise;
+    width:50%;
+}
+#red
+{
+    color:red;
+}
+.container {
+    display: flex;
+    width: 80%;
+    margin-top: 20px;
+}
+.presets, .creator {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin: 10px;
+    flex: 1;
+}
+.presets {
+    max-width: 300px;
+}
+.creator {
+    flex: 2;
+}
+.button {
+    display: block;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    width:220px;
+    text-decoration: none;
+}
+.button:hover {
+    background-color: #dc16aa;
+}
+.button-large {
+    font-size: 1.2em;
+}
+.button-green {
+    background-color: #28a745;
+    
+}
+.button-red {
+    background-color: #dc3545;
+}
+.preset-buttons {
+    margin-top: 10px;
+    text-decoration: none;
+}
+a{
+    text-decoration:none;
+    color:white;
+}

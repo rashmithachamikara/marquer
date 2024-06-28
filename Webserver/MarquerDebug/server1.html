@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32 Command Sender</title>
+</head>
+<body>
+  <h1>ESP32 Command Sender</h1>
+  <label for="command">Enter Command:</label>
+  <input type="text" id="command" name="command">
+  <br><br>
+  <button onclick="sendGetCommand()">Send GET Command</button>
+  <button onclick="sendPostCommand()">Send POST Command</button>
+  <div id="response"></div>
+  <script>
+    function sendGetCommand() {
+      const command = document.getElementById("command").value;
+      const esp32IP = window.location.hostname;
+      fetch(`http://${esp32IP}/get_command?command=${encodeURIComponent(command)}`)
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById("response").textContent = data;
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+    function sendPostCommand() {
+      const command = document.getElementById("command").value;
+      const esp32IP = window.location.hostname;
+      fetch(`http://${esp32IP}/post_command`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `message=${encodeURIComponent(command)}`
+      })
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById("response").textContent = data;
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ESP32 Variable Display</title>
+  <style>
+    .compass {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      border: 2px solid black;
+      border-radius: 50%;
+      margin: 20px auto;
+    }
+    .needle {
+      position: absolute;
+      width: 2px;
+      height: 100px;
+      background: red;
+      left: 99px;
+      transform-origin: bottom;
+    }
+  </style>
+</head>
+<body>
+  <h1>ESP32 Web Server</h1>
+  <p>Variable value: <span id="variable"></span></p>
+  <div class="compass">
+    <div class="needle" id="needle"></div>
+  </div>
+
+  <script>
+    const esp32_ip = '192.168.1.11'; // Replace with the actual IP address of your ESP32
+
+    setInterval(function() {
+      fetch(`http://${esp32_ip}/variable`)
+        .then(response => response.text())
+        .then(data => {
+          const variableValue = parseInt(data, 10);
+          document.getElementById('variable').innerText = variableValue;
+          document.getElementById('needle').style.transform = `rotate(${360-variableValue}deg)`;
+        })
+        .catch(error => console.error('Error fetching variable:', error));
+    }, 100); // Update every second
+  </script>
+</body>
+</html>

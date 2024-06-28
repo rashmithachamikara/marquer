@@ -1,0 +1,27 @@
+c:\Users\rashm\OneDrive\Documents\Arduino\libraries\ESPAsyncWebServer\src\WebAuthentication.cpp: In function 'bool getMD5(uint8_t*, uint16_t, char*)':
+c:\Users\rashm\OneDrive\Documents\Arduino\libraries\ESPAsyncWebServer\src\WebAuthentication.cpp:74:3: error: 'mbedtls_md5_starts_ret' was not declared in this scope; did you mean 'mbedtls_md5_starts'?
+   74 |   mbedtls_md5_starts_ret(&_ctx);
+      |   ^~~~~~~~~~~~~~~~~~~~~~
+      |   mbedtls_md5_starts
+c:\Users\rashm\OneDrive\Documents\Arduino\libraries\ESPAsyncWebServer\src\WebAuthentication.cpp:75:3: error: 'mbedtls_md5_update_ret' was not declared in this scope; did you mean 'mbedtls_md5_update'?
+   75 |   mbedtls_md5_update_ret(&_ctx, data, len);
+      |   ^~~~~~~~~~~~~~~~~~~~~~
+      |   mbedtls_md5_update
+c:\Users\rashm\OneDrive\Documents\Arduino\libraries\ESPAsyncWebServer\src\WebAuthentication.cpp:76:3: error: 'mbedtls_md5_finish_ret' was not declared in this scope; did you mean 'mbedtls_md5_finish'?
+   76 |   mbedtls_md5_finish_ret(&_ctx, _buf);
+      |   ^~~~~~~~~~~~~~~~~~~~~~
+      |   mbedtls_md5_finish
+c:\Users\rashm\OneDrive\Documents\Arduino\libraries\ESPAsyncWebServer\src\AsyncEventSource.cpp: In member function 'void AsyncEventSourceClient::_queueMessage(AsyncEventSourceMessage*)':
+c:\Users\rashm\OneDrive\Documents\Arduino\libraries\ESPAsyncWebServer\src\AsyncEventSource.cpp:189:7: error: 'ets_printf' was not declared in this scope; did you mean 'vswprintf'?
+  189 |       ets_printf("ERROR: Too many messages queued\n");
+      |       ^~~~~~~~~~
+      |       vswprintf
+c:\Users\rashm\OneDrive\Documents\Arduino\libraries\ESPAsyncWebServer\src\AsyncWebSocket.cpp: In member function 'void AsyncWebSocketClient::_queueMessage(AsyncWebSocketMessage*)':
+c:\Users\rashm\OneDrive\Documents\Arduino\libraries\ESPAsyncWebServer\src\AsyncWebSocket.cpp:549:7: error: 'ets_printf' was not declared in this scope; did you mean 'vswprintf'?
+  549 |       ets_printf("ERROR: Too many messages queued\n");
+      |       ^~~~~~~~~~
+      |       vswprintf
+
+exit status 1
+
+Compilation error: exit status 1

@@ -1,0 +1,54 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.page {
+    width: 80%;
+    max-width: 600px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+#creator-page input,
+#creator-page select,
+#creator-page button {
+    margin: 10px 0;
+}
+
+#presets-list {
+    margin: 20px 0;
+}
+
+#presets-list button {
+    display: block;
+    width: 100%;
+    margin: 5px 0;
+}
+
+#route-canvas {
+    border: 1px solid #ccc;
+    margin-top: 10px;
+}
+
+.step-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.step-controls {
+    display: flex;
+    gap: 5px;
+}

@@ -1,0 +1,28 @@
+GyroZ = -0.019030
+
+Accel X: 0.558145 m/s²
+Accel Y: 0.836523 m/s²
+Accel Z: -9.245437 m/s²
+
+
+Accel v1
+Accel X: 0.726235 m/s²
+Accel Y: 0.732068 m/s²
+Accel Z: -9.238130 m/s²
+
+Accel X: 0.602773 m/s²
+Accel Y: 1.015732 m/s²
+Accel Z: -9.224665 m/s²
+
+Accel X: 0.548041 m/s²
+Accel Y: 1.111741 m/s²
+Accel Z: -9.217721 m/s²
+
+
+Accel v2
+Accel Bias X: 0.05
+Accel Bias Y: 0.22
+Accel Bias Z: 0.63
+Accel Scale X: -87.81
+Accel Scale Y: 46.60
+Accel Scale Z: -0.99

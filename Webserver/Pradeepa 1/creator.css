@@ -1,0 +1,49 @@
+body
+{
+    background-color: palegreen;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.presets {
+    max-width: 300px;
+    align-items:center;
+}
+.creator {
+    flex: 2;
+}
+.button {
+    display: block;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    width:200px;
+}
+.button:hover {
+    background-color: #631dc6;
+}
+#creators
+{
+    text-decoration: none;
+    color:white;
+}
+h2
+{
+    text-align: center;
+}
+.button-large {
+    font-size: 1.2em;
+}
+.button-green {
+    background-color: #28a745;
+}
+.button-red {
+    background-color: #dc3545;
+}
+.preset-buttons {
+    margin-top: 10px;
+}

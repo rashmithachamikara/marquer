@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marquer Controller Application</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <div id="creator-page" class="page">
+            <input type="text" id="preset-name" placeholder="Preset Name/New Preset">
+            <button id="view-presets">Presets</button>
+            <div id="create-route">
+                <h3>Create Route</h3>
+                <div>
+                    <select id="direction">
+                        <option value="" disabled selected>Direction</option>
+                        <option value="left">Left</option>
+                        <option value="right">Right</option>
+                        <option value="up">Up</option>
+                        <option value="down">Down</option>
+                        <option value="0">0°</option>
+                        <option value="90">90°</option>
+                        <option value="180">180°</option>
+                        <option value="270">270°</option>
+                    </select>
+                    <input type="number" id="distance" placeholder="Distance (cm)">
+                    <button id="add-step">+</button>
+                </div>
+                <ul id="step-list"></ul>
+            </div>
+            <div id="preview-route">
+                <h3>Preview Route</h3>
+                <canvas id="route-canvas" width="400" height="400"></canvas>
+            </div>
+            <button id="send">Send</button>
+            <button id="save">Save</button>
+        </div>
+
+        <div id="presets-page" class="page hidden">
+            <h3>List of Presets</h3>
+            <div id="presets-list">
+                <!-- Presets will be dynamically added here -->
+            </div>
+            <button id="back-to-creator">Creator</button>
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>

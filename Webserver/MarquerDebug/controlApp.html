@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Car Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            margin-top: 20px;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .slider-container {
+            margin: 20px 0;
+        }
+        .direction-buttons, .control-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        .direction-buttons button, .control-buttons button {
+            width: 48%;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        #console {
+            width: 100%;
+            height: 150px;
+            background: #333;
+            color: #fff;
+            padding: 10px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .apply-button, .brake-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>ESP32 Car Control</h1>
+    <div class="container">
+        <div class="slider-container">
+            <label for="motorA">Motor A Speed: <span id="motorASpeed">0</span></label>
+            <input type="range" id="motorA" name="motorA" min="0" max="200" value="0" oninput="updateSpeed('A')">
+        </div>
+        <div class="slider-container">
+            <label for="motorB">Motor B Speed: <span id="motorBSpeed">0</span></label>
+            <input type="range" id="motorB" name="motorB" min="0" max="200" value="0" oninput="updateSpeed('B')">
+        </div>
+        <button class="apply-button" onclick="applySpeed()">Apply Speed</button>
+        <div class="slider-container">
+            <label for="bothMotors">Both Motors Speed: <span id="bothMotorsSpeed">0</span></label>
+            <input type="range" id="bothMotors" name="bothMotors" min="0" max="200" value="0" oninput="updateSpeed('Both')">
+        </div>
+        <button class="apply-button" onclick="applyBothSpeed()">Apply Both Motors Speed</button>
+        <div class="control-buttons">
+            <button class="brake-button" onclick="brake()">Brake</button>
+        </div>
+        <div class="direction-buttons">
+            <button onclick="changeDirection('A')">Change Motor A Direction</button>
+            <button onclick="changeDirection('B')">Change Motor B Direction</button>
+        </div>
+        <div id="console"></div>
+    </div>
+
+    <script>
+        const motorSpeeds = { A: 0, B: 0 };
+
+        function updateSpeed(motor) {
+            let speed;
+            if (motor === 'Both') {
+                speed = document.getElementById('bothMotors').value;
+                document.getElementById('bothMotorsSpeed').innerText = speed;
+                document.getElementById('motorA').value = speed;
+                document.getElementById('motorB').value = speed;
+                document.getElementById('motorASpeed').innerText = speed;
+                document.getElementById('motorBSpeed').innerText = speed;
+                motorSpeeds.A = speed;
+                motorSpeeds.B = speed;
+            } else {
+                speed = document.getElementById(`motor${motor}`).value;
+                document.getElementById(`motor${motor}Speed`).innerText = speed;
+                motorSpeeds[motor] = speed;
+            }
+        }
+
+        function applySpeed() {
+            const log = `Applying speeds - Motor A: ${motorSpeeds.A}, Motor B: ${motorSpeeds.B}`;
+            addLog(log);
+            sendToESP32(`a${motorSpeeds.A}`);
+            sendToESP32(`b${motorSpeeds.B}`);
+        }
+
+        function applyBothSpeed() {
+            const log = `Applying both motors speed: ${motorSpeeds.A}`;
+            addLog(log);
+            sendToESP32(`c${motorSpeeds.A}`);
+        }
+
+        function changeDirection(motor) {
+            const log = `Changing direction of Motor ${motor}`;
+            addLog(log);
+            sendToESP32(`dir${motor}`);
+        }
+
+        function brake() {
+            const log = `Applying brake - Stopping both motors`;
+            addLog(log);
+            motorSpeeds.A = 0;
+            motorSpeeds.B = 0;
+            document.getElementById('motorA').value = 0;
+            document.getElementById('motorB').value = 0;
+            document.getElementById('motorASpeed').innerText = 0;
+            document.getElementById('motorBSpeed').innerText = 0;
+            document.getElementById('bothMotors').value = 0;
+            document.getElementById('bothMotorsSpeed').innerText = 0;
+            sendToESP32(`stop`);
+        }
+
+        function addLog(message) {
+            const consoleElement = document.getElementById('console');
+            const logEntry = document.createElement('div');
+            logEntry.textContent = message;
+            consoleElement.appendChild(logEntry);
+            consoleElement.scrollTop = consoleElement.scrollHeight;
+        }
+
+        // Function to send commands to ESP32
+        function sendToESP32(command) {
+            const esp32IP = window.location.hostname;
+            fetch(`http://${esp32IP}/post_command`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `${encodeURIComponent(command)}`
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log('Response from ESP32:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+
+</body>
+</html>

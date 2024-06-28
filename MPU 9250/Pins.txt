@@ -1,0 +1,5 @@
+Pins
+VCC -> 3.3v
+GND -> gnd
+SCL -> D22
+SDA -> D21

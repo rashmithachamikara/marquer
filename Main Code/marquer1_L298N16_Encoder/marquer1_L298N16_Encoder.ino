@@ -10,9 +10,9 @@ PID for moving straight
 PID for turning
 Truning continously till turned 
 Tuned for turning
-
-TODO
-Attempt recover from stalling
+Recover from stalling
+Add turn speed value as a global variable
+Changed PID system to run in realtime with 50ms dt clock
 
 ===============================================================
 
@@ -33,30 +33,41 @@ Attempt recover from stalling
 
 #define LED 2
 
-// Constants for encoder resolution
-const float ENCODER_RESOLUTION = 8; // counts per rotation
-
 // ======== L298N =========
 int speedA = 0; // Speed for motor A (0 to 255) Right
 int speedB = 0; // Speed for motor B (0 to 255) Left
-volatile int encoder1Count = 0;
-volatile int encoder2Count = 0;
-
-int lastEncoder1Count = 0;
-int lastEncoder2Count = 0;
-unsigned long lastSerialUpdateTime = 0;
 
 bool reverseA = false; // Direction flag for motor A
 bool reverseB = false; // Direction flag for motor B
+
+unsigned long lastSerialUpdateTime = 0;
 //===========================
 
 // ========= Encoders =========
+
+// Constants for encoder resolution
+const float ENCODER_RESOLUTION = 40; // counts per rotation
+volatile int encoder1Count = 0;
+volatile int encoder2Count = 0;
+int lastEncoder1Count = 0;
+int lastEncoder2Count = 0;
+unsigned long lastInterruptTime1 = 0;
+unsigned long lastInterruptTime2 = 0;
+
 void IRAM_ATTR handleEncoder1Interrupt() {
-  encoder1Count++;
+  unsigned long interruptTime = millis();
+  if (interruptTime - lastInterruptTime1 > 5){
+    encoder1Count++;
+    lastInterruptTime1 = interruptTime;
+  }
 }
 
 void IRAM_ATTR handleEncoder2Interrupt() {
-  encoder2Count++;
+  unsigned long interruptTime = millis();
+  if (interruptTime - lastInterruptTime2 > 5){
+    encoder2Count++;
+    lastInterruptTime2 = interruptTime;
+  }
 }
 //===========================
 
@@ -71,22 +82,24 @@ double gyroBiasZ = -0.019000; // Caluclated with repeated data collection averag
 
 // PID constants
 double desiredYaw = 0.0; // Target yaw angle
-double Kp = 0.5; //2.5;
-double Ki = 0.4; //0.5;
-double Kd = 2; //1;
+double Kp = 2.5;
+double Ki = 0.5;
+double Kd = 1;
 double integral = 0;
 double lastError = 0;
 double dt = 0.1; // Time interval for PID calculation
 unsigned long lastTime = 0;
+unsigned long lastPidUpdateTime = 0;
 int minPidSpeed = 60;
-int maxPidSpeed = 160;
+int maxPidSpeed = 180;
 
 //Turning Variables
 double turnTargetYaw = 0.00;
 int turnDirection;
 int turning = 0; //Context switch. Change to more sophisticated method later
-int turnSpeedA = 0;
-int turnSpeedB = 0;
+//int turnSpeedA = 0; //Caclulation variables. Probably unnecessary
+//int turnSpeedB = 0; //Caclulation variables. Probably unnecessary
+int turnBaseSpeed = 80; //Speed for turning
 double turnIntegral = 0;
 double lastTurnError = 0;
 bool overshootMode = false;
@@ -190,7 +203,7 @@ void loop() {
 
     // Calculate Delta Time (dt)
     unsigned long currentTimeMpu = millis();
-    float dtMpu = (currentTimeMpu - lastTimeMpu) / 1000.0;
+    double dtMpu = (currentTimeMpu - lastTimeMpu) / 1000.0;
     lastTimeMpu = currentTimeMpu;
 
     // Integrate gyroscope data for yaw
@@ -198,28 +211,32 @@ void loop() {
   }
   //===========================
 
-  //========= PID =========
-  dt = (currentTime - lastTime) / 1000.0; // Convert to seconds. Comment to use constant time
-  
+  //=========== PID ===========
+  //Do PID per 100s
+  if (currentTime - lastPidUpdateTime >= 50){
+    dt = (currentTime - lastTime) / 1000.0; // Convert to seconds. Comment to use constant time
 
-  // PID calculations for yaw control
-  double error = desiredYaw - yaw;
-  integral += error * dt;
-  double derivative = (error - lastError) / dt;
+    // PID calculations for yaw control
+    double error = desiredYaw - yaw;
+    integral += error * dt;
+    double derivative = (error - lastError) / dt;
 
-  double pidOutput = Kp * error + Ki * integral + Kd * derivative;
+    double pidOutput = Kp * error + Ki * integral + Kd * derivative;
 
-  //Only apply PID if not turning
-  if (turning == 0){
-    // Adjust motor speeds based on PID output, if speed>20
-    if (speedA>20 && speedB>20) {
-      speedA = constrain(speedA - pidOutput, minPidSpeed, maxPidSpeed);
-      speedB = constrain(speedB + pidOutput, minPidSpeed, maxPidSpeed);
+    //Only apply PID if not turning
+    if (turning == 0){
+      // Adjust motor speeds based on PID output, if speed>20
+      if (speedA>20 && speedB>20) {
+        speedA = constrain(speedA - pidOutput, minPidSpeed, maxPidSpeed);
+        speedB = constrain(speedB + pidOutput, minPidSpeed, maxPidSpeed);
+      }
     }
-  }
 
-  lastError = error;   
-  lastTime = currentTime;
+    lastError = error;   
+    lastTime = currentTime;
+    lastPidUpdateTime = currentTime;
+    //WebPrintln("Hit!"+String(currentTime));
+  }
   //===========================
 
   //========= Turn =========
@@ -259,7 +276,6 @@ void loop() {
     Serial.print("Encoder2Speed:"); Serial.print(encoder2Speed);Serial.print("\t");
 
     // Print out the yaw value
-    Serial.print("Error: "); Serial.print(error);
     Serial.print("Yaw: "); Serial.print(yaw,6);
     Serial.print("\n");
 
@@ -268,9 +284,11 @@ void loop() {
     lastSerialUpdateTime = currentTime;
 
     WebPrint("sR:"+String(speedA));
-    WebPrint("sL:"+String(speedB));
-    WebPrint("yaw:"+String(yaw));
-    WebPrint("yaw:"+String(yaw));
+    WebPrint(", sL:"+String(speedB));
+    WebPrint(", EncL:"+String(encoder1Count/ENCODER_RESOLUTION));
+    WebPrint(", WncR:"+String(encoder2Count/ENCODER_RESOLUTION));
+    //WebPrint("yaw:"+String(yaw));
+    WebPrintln(", yaw:"+String(yaw));
 
   }
 
@@ -280,7 +298,7 @@ void loop() {
     changeSpeed(input);  // Pass the input to the changeSpeed function
   }
 
-  delay(10); // Short delay to avoid overloading the Serial communication
+  //delay(10); // Short delay to avoid overloading the Serial communication
 }
 
 void turn() {
@@ -336,15 +354,15 @@ void turn() {
 
   //Apply power
   if(!checkingOvershoot){
-    speedA = constrain(120 + error, 80, 180);
-    speedB = constrain(120 + error, 80, 180);
+    speedA = constrain(turnBaseSpeed + error, 80, 180);
+    speedB = constrain(turnBaseSpeed + error, 80, 180);
     analogWrite(ENA, speedA);
     analogWrite(ENB, speedB);
   }
   //In overshoot mode, apply a constant power
   if(overshootMode){
-    speedA = constrain(160 , 80, 180);
-    speedB = constrain(160, 80, 180);
+    speedA = constrain(turnBaseSpeed*1.4 , 80, 180);
+    speedB = constrain(turnBaseSpeed*1.4, 80, 180);
     analogWrite(ENA, speedA);
     analogWrite(ENB, speedB);
   }
@@ -432,13 +450,13 @@ void changeSpeed(String input) {
   if (input.startsWith("A")) {
     speedA = input.substring(1).toInt();
     speedA = constrain(speedA, 0, 255); // Constrain speed to 0-255
-    turnSpeedA = speedA;
+    //turnSpeedA = speedA;
     Serial.print("Speed of Motor A set to: ");
     Serial.println(speedA);
   } else if (input.startsWith("B")) {
     speedB = input.substring(1).toInt();
     speedB = constrain(speedB, 0, 255); // Constrain speed to 0-255
-    turnSpeedB = speedB;
+    //turnSpeedB = speedB;
     Serial.print("Speed of Motor B set to: ");
     Serial.println(speedB);
   } else if (input.startsWith("C")) {

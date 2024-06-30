@@ -68,8 +68,8 @@ double Kd = 1;
 double integral = 0;
 double lastError = 0;
 double dt = 0.1; // Time interval for PID calculation
-int minPidSpeed = 60;
-int maxPidSpeed = 160;
+int minPidSpeed = 80;
+int maxPidSpeed = 180;
 
 //===========================
 

@@ -1,3 +1,9 @@
+/*
+
+Copied from: L298NserialSpeedAdjust2
+
+*/
+
 #define IN1 25
 #define IN2 26
 #define IN3 27
@@ -9,8 +15,8 @@
 #define ENCODER2_PIN 35
 
 // Constants for encoder resolution
-const float ENCODER_1_RESOLUTION = 720; // counts per rotation
-const float ENCODER_2_RESOLUTION = 510; // counts per rotation
+const float ENCODER_1_RESOLUTION = 40; // counts per rotation
+const float ENCODER_2_RESOLUTION = 40; // counts per rotation
 
 int speedA = 0; // Speed for motor A (0 to 255)
 int speedB = 0; // Speed for motor B (0 to 255)
@@ -21,14 +27,23 @@ int lastEncoder1Count = 0;
 int lastEncoder2Count = 0;
 unsigned long lastTime = 0;
 
-unsigned long lastInterruptTime = 0;
+unsigned long lastInterruptTime1 = 0;
+unsigned long lastInterruptTime2 = 0;
 
 void IRAM_ATTR handleEncoder1Interrupt() {
-  encoder1Count++;
+  unsigned long interruptTime = millis();
+  if (interruptTime - lastInterruptTime1 > 5){
+    encoder1Count++;
+    lastInterruptTime1 = interruptTime;
+  }
 }
 
 void IRAM_ATTR handleEncoder2Interrupt() {
-  encoder2Count++;
+  unsigned long interruptTime = millis();
+  if (interruptTime - lastInterruptTime2 > 5){
+    encoder2Count++;
+    lastInterruptTime2 = interruptTime;
+  }
 }
 
 void setup() {

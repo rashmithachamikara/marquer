@@ -1,6 +1,8 @@
 /*
 
-================= L298N Motor Control =========================
+================= Marquer Main Code =========================
+
+For now, copied from: Components/L298N/"L298NserialSpeedAdjust16_MarkurWeb_Gyro_PID_Turn_Overshootv2"
 
 L298N Motor Control
 Display encoder feedback input
@@ -247,14 +249,15 @@ void loop() {
     digitalWrite(IN4, HIGH);
   }
 
-  // Once every 300ms stuff
-  if (currentTime - lastSerialUpdateTime >= 100) {
+  // Once every 200ms stuff
+  if (currentTime - lastSerialUpdateTime >= 200) {
     float encoder1Speed = (encoder1Count - lastEncoder1Count) * (1000.0 / ENCODER_RESOLUTION); // Rotations per second
     float encoder2Speed = (encoder2Count - lastEncoder2Count) * (1000.0 / ENCODER_RESOLUTION); // Rotations per second
 
     // Send data to Serial Plotter in a single line with comma-separated values
     Serial.print("Encoder1Speed:"); Serial.print(encoder1Speed);Serial.print(", ");
     Serial.print("Encoder2Speed:"); Serial.print(encoder2Speed);Serial.print("\t");
+
     // Print out the yaw value
     Serial.print("Error: "); Serial.print(error);
     Serial.print("Yaw: "); Serial.print(yaw,6);
@@ -267,7 +270,14 @@ void loop() {
     WebPrint("sR:"+String(speedA));
     WebPrint("sL:"+String(speedB));
     WebPrint("yaw:"+String(yaw));
-    WebPrintln("tItg:"+String(turnIntegral));
+    WebPrint("yaw:"+String(yaw));
+
+  }
+
+  //Check for serial input
+  if (Serial.available() > 0) {  // Check if there is any serial input available
+    String input = Serial.readStringUntil('\n');  // Read the input until newline character
+    changeSpeed(input);  // Pass the input to the changeSpeed function
   }
 
   delay(10); // Short delay to avoid overloading the Serial communication

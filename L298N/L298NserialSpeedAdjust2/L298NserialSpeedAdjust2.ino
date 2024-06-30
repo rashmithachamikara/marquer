@@ -9,7 +9,8 @@
 #define ENCODER2_PIN 35
 
 // Constants for encoder resolution
-const float ENCODER_RESOLUTION = 140; // counts per rotation
+const float ENCODER_1_RESOLUTION = 720; // counts per rotation
+const float ENCODER_2_RESOLUTION = 510; // counts per rotation
 
 int speedA = 0; // Speed for motor A (0 to 255)
 int speedB = 0; // Speed for motor B (0 to 255)
@@ -118,8 +119,8 @@ void loop() {
 
   // Calculate and print the speed of the encoders every 100ms
   if (currentTime - lastTime >= 100) {
-    float encoder1Speed = (encoder1Count - lastEncoder1Count) * (1000.0 / ENCODER_RESOLUTION); // Rotations per second
-    float encoder2Speed = (encoder2Count - lastEncoder2Count) * (1000.0 / ENCODER_RESOLUTION); // Rotations per second
+    float encoder1Speed = (encoder1Count - lastEncoder1Count); // * (1000.0 / ENCODER_RESOLUTION); // Rotations per second
+    float encoder2Speed = (encoder2Count - lastEncoder2Count); // * (1000.0 / ENCODER_RESOLUTION); // Rotations per second
 
     // Send data to Serial Plotter in a single line with comma-separated values
     Serial.print("Encoder1Speed:");
@@ -135,9 +136,9 @@ void loop() {
 
   // Print the encoder counts every second
   Serial.print(" Encoder1LCount:");
-  Serial.print(encoder1Count/ENCODER_RESOLUTION);
+  Serial.print(encoder1Count/ENCODER_1_RESOLUTION);
   Serial.print(" Encoder2RCount:");
-  Serial.println(encoder2Count/ENCODER_RESOLUTION);
+  Serial.println(encoder2Count/ENCODER_2_RESOLUTION);
   lastTime = currentTime;
 
 

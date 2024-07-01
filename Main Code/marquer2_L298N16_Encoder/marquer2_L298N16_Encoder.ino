@@ -453,8 +453,8 @@ void turn() {
         WebPrintln("Current YAw: " + String(yaw));
         WebPrintln("Significant Overshoot Detected. Retrying!");
       } else {
-        Serial.println("No overshoot.");
-        WebPrintln("No overshoot.");
+        Serial.println("No considerable overshoot.");
+        WebPrintln("No considerable overshoot.");
         //Finalize turning
         Serial.println("Turned!");
         WebPrintln("Turned");
@@ -463,8 +463,14 @@ void turn() {
         speedB = 0;
         analogWrite(ENA, speedA);
         analogWrite(ENB, speedB);
+        //Release any break
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN2, LOW);
+        digitalWrite(IN3, LOW);
+        digitalWrite(IN4, HIGH);
         reverseA = false;
         reverseB = false;
+        //Reset Variables
         turnIntegral = 0;
         lastTurnError = 0;
         overshootMode = false;

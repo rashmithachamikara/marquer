@@ -15,7 +15,7 @@ Add turn speed value as a global variable
 Changed PID system to run in realtime with 50ms dt clock
 
 Todo
-- Add 
+- Wheel count to distance
 
 ===============================================================
 
@@ -56,6 +56,12 @@ int lastEncoder1Count = 0;
 int lastEncoder2Count = 0;
 unsigned long lastInterruptTime1 = 0;
 unsigned long lastInterruptTime2 = 0;
+double wheelDiameter = 21.25; //Whell diameter is measured to be 21.25cm
+double wheel1Rotations = 0;
+double wheel2Rotations = 0;
+double wheel1Distance = 0; //Distance in cm
+double wheel2Distance = 0; //Distance in cm
+double wheelDistance = 0;
 
 void IRAM_ATTR handleEncoder1Interrupt() {
   unsigned long interruptTime = millis();
@@ -102,11 +108,12 @@ int turnDirection;
 int turning = 0; //Context switch. Change to more sophisticated method later
 //int turnSpeedA = 0; //Caclulation variables. Probably unnecessary
 //int turnSpeedB = 0; //Caclulation variables. Probably unnecessary
-int turnBaseSpeed = 80; //Speed for turning
+int turnBaseSpeed = 100; //Speed for turning
 double turnIntegral = 0;
 double lastTurnError = 0;
 bool overshootMode = false;
 //unsigned long lastTimeTurned = 0; //Probably unnecessary
+unsigned long lastTurnPidTime = 0;
 double turnErrorMargin = 2;
 unsigned long turnCompletionTime = 0;
 bool checkingOvershoot = false;
@@ -249,6 +256,7 @@ void loop() {
   }
   //===========================
 
+  //========= L298N =========
   // Control motor direction and speed
   analogWrite(ENA, speedA);
   analogWrite(ENB, speedB);
@@ -268,6 +276,15 @@ void loop() {
     digitalWrite(IN3, LOW);
     digitalWrite(IN4, HIGH);
   }
+  //===========================
+
+  //========= Encoder =========
+  wheel1Rotations = encoder1Count/ENCODER_RESOLUTION;
+  wheel2Rotations = encoder2Count/ENCODER_RESOLUTION;
+  wheel1Distance = wheel1Rotations*wheelDiameter;
+  wheel2Distance = wheel2Rotations*wheelDiameter;
+  wheelDistance = (wheel1Distance+wheel2Distance)/2;
+  //===========================
 
   // Once every 200ms stuff
   if (currentTime - lastSerialUpdateTime >= 200) {
@@ -288,8 +305,12 @@ void loop() {
 
     WebPrint("sR:"+String(speedA));
     WebPrint(", sL:"+String(speedB));
-    WebPrint(", EncL:"+String(encoder1Count/ENCODER_RESOLUTION));
-    WebPrint(", WncR:"+String(encoder2Count/ENCODER_RESOLUTION));
+    //WebPrint(", EncL:"+String(wheel1Rotations));
+    //WebPrint(", WncR:"+String(wheel2Rotations));
+    //WebPrint(", D1:"+String(wheel1Distance));
+    //WebPrint(", D2:"+String(wheel2Distance));
+    //WebPrint(", DT:"+String(wheelDistance));
+
     //WebPrint("yaw:"+String(yaw));
     WebPrintln(", yaw:"+String(yaw));
 
@@ -314,16 +335,30 @@ void turn() {
   double Ki = 0.4;
   double Kd = 1.5;
 
-  //Turn PID
-  double turnError = abs(turnTargetYaw - yaw);
-  turnIntegral += turnError * dt; //Integral should not exceed 200. No need. Such value is abnormal
-  double turnDerivative = (turnError - lastTurnError) / dt;
+  double turnError;
+  double turnDerivative;
+  double error;
 
-  //Constrain the turn integral
-  turnIntegral = constrain(turnIntegral, -200, 200);
+  double currentTime = micros();
 
-  double error = (Kp * turnError) + (Ki * turnIntegral) + (Kd * turnDerivative);
-  lastTurnError = turnError;
+  if(currentTime-lastTurnPidTime >= 50)
+  {
+    //Turn PID
+    dt = (currentTime - lastTurnPidTime)/1000; //Convert to seconds. Otherwise, values are abnormally large!
+
+    turnError = abs(turnTargetYaw - yaw);
+    turnIntegral += turnError * dt; 
+    turnDerivative = (turnError - lastTurnError) / dt;
+
+    //Constrain the turn integral
+    turnIntegral = constrain(turnIntegral, -200, 200);
+
+    error = (Kp * turnError) + (Ki * turnIntegral) + (Kd * turnDerivative);
+    lastTurnError = turnError;
+
+    lastTurnPidTime = currentTime;
+  }
+  
 
   //Set turn direction. Yaw should be 0 at the beginning of the turn
   if (turnTargetYaw > yaw) {
@@ -333,7 +368,7 @@ void turn() {
   }
 
   //Anti Motor Stall. Pause and give a massive speed suddenly if integral is too much (which means it stayed in once yaw for long)
-  if (turnIntegral >= 180) {
+  if (0 && turnIntegral >= 180) { //0 Disabled for now
     speedA = 0;
     speedB = 0;
     analogWrite(ENA, speedA);

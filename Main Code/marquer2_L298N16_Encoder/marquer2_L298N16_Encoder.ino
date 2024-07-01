@@ -337,7 +337,7 @@ void turn() {
 
   double turnError;
   double turnDerivative;
-  double error;
+  double turnPidOutput;
 
   double currentTime = micros();
 
@@ -353,7 +353,7 @@ void turn() {
     //Constrain the turn integral
     turnIntegral = constrain(turnIntegral, -200, 200);
 
-    error = (Kp * turnError) + (Ki * turnIntegral) + (Kd * turnDerivative);
+    turnPidOutput = (Kp * turnError) + (Ki * turnIntegral) + (Kd * turnDerivative);
     lastTurnError = turnError;
 
     lastTurnPidTime = currentTime;
@@ -392,8 +392,8 @@ void turn() {
 
   //Apply power
   if(!checkingOvershoot){
-    speedA = constrain(turnBaseSpeed + error, 80, 180);
-    speedB = constrain(turnBaseSpeed + error, 80, 180);
+    speedA = constrain(turnBaseSpeed + turnPidOutput, 80, 180);
+    speedB = constrain(turnBaseSpeed + turnPidOutput, 80, 180);
     analogWrite(ENA, speedA);
     analogWrite(ENB, speedB);
   }

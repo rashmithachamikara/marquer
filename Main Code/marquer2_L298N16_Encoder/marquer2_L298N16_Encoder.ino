@@ -109,8 +109,11 @@ int turning = 0; //Context switch. Change to more sophisticated method later
 //int turnSpeedA = 0; //Caclulation variables. Probably unnecessary
 //int turnSpeedB = 0; //Caclulation variables. Probably unnecessary
 int turnBaseSpeed = 100; //Speed for turning
+double turnError;
+double turnDerivative;
 double turnIntegral = 0;
 double lastTurnError = 0;
+double turnPidOutput;
 bool overshootMode = false;
 //unsigned long lastTimeTurned = 0; //Probably unnecessary
 unsigned long lastTurnPidTime = 0;
@@ -305,14 +308,16 @@ void loop() {
 
     WebPrint("sR:"+String(speedA));
     WebPrint(", sL:"+String(speedB));
+    WebPrint(", Te:"+String(turnError));
+    WebPrint(", Ti:"+String(turnIntegral));
+    WebPrint(", Td:"+String(turnDerivative));
     //WebPrint(", EncL:"+String(wheel1Rotations));
     //WebPrint(", WncR:"+String(wheel2Rotations));
     //WebPrint(", D1:"+String(wheel1Distance));
     //WebPrint(", D2:"+String(wheel2Distance));
     //WebPrint(", DT:"+String(wheelDistance));
-
-    //WebPrint("yaw:"+String(yaw));
-    WebPrintln(", yaw:"+String(yaw));
+    WebPrint(", yaw:"+String(yaw));
+    WebPrintln(", tPid:"+String(turnPidOutput));
 
   }
 
@@ -335,11 +340,12 @@ void turn() {
   double Ki = 0.4;
   double Kd = 1.5;
 
-  double turnError;
-  double turnDerivative;
-  double turnPidOutput;
+  // For testing, moved to global scope
+  // double turnError;
+  // double turnDerivative;
+  // double turnPidOutput;
 
-  double currentTime = micros();
+  double currentTime = millis();
 
   if(currentTime-lastTurnPidTime >= 50)
   {

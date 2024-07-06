@@ -105,6 +105,10 @@ int maxPidSpeed = 180;
 //Turning Variables
 double turnTargetYaw = 0.00;
 int turnDirection;
+//PID constants for turning.
+double turnKp = 0.6;
+double turnKi = 0.4;
+double turnKd = 1.5;
 int turning = 0; //Context switch. Change to more sophisticated method later
 //int turnSpeedA = 0; //Caclulation variables. Probably unnecessary
 //int turnSpeedB = 0; //Caclulation variables. Probably unnecessary
@@ -335,11 +339,6 @@ void turn() {
   //Direction 0 - right. 1 - left
   Serial.println("Hit turn() function"); 
 
-  //PID constants for turning. Change these names to unique names different from drive straight names after testings
-  double Kp = 0.6;
-  double Ki = 0.4;
-  double Kd = 1.5;
-
   // For testing, moved to global scope
   // double turnError;
   // double turnDerivative;
@@ -359,7 +358,7 @@ void turn() {
     //Constrain the turn integral
     turnIntegral = constrain(turnIntegral, -200, 200);
 
-    turnPidOutput = (Kp * turnError) + (Ki * turnIntegral) + (Kd * turnDerivative);
+    turnPidOutput = (turnKp * turnError) + (turnKi * turnIntegral) + (turnKd * turnDerivative);
     lastTurnError = turnError;
 
     lastTurnPidTime = currentTime;
@@ -518,19 +517,22 @@ void changeSpeed(String input) {
     Serial.println(speed);
   } else if (input.startsWith("P")) {
     Kp = input.substring(1).toDouble();
-    Serial.print("Kp Set to: ");
+    turnKp = input.substring(1).toDouble();
+    Serial.print("Kp/turn Set to: ");
     Serial.println(Kp);
-    WebPrintln("Kp Set to: " + String(Kp));
+    WebPrintln("Kp/turnKp Set to: " + String(Kp));
   } else if (input.startsWith("I")) {
     Ki = input.substring(1).toDouble();
+    turnKi = input.substring(1).toDouble();
     Serial.print("Ki Set to: ");
     Serial.println(Ki);
-    WebPrintln("Ki Set to: " + String(Ki));
+    WebPrintln("Ki/turnKi Set to: " + String(Ki));
   } else if (input.startsWith("D")) {
     Kd = input.substring(1).toDouble();
+    turnKd = input.substring(1).toDouble();
     Serial.print("Kd Set to: ");
     Serial.println(Kd);
-    WebPrintln("Kd Set to: " + String(Kd));
+    WebPrintln("Kd/turnKd Set to: " + String(Kd));
   } else if (input.startsWith("M")) {
     turnErrorMargin = input.substring(1).toDouble();
     Serial.print("Turn error Margin Set to: ");

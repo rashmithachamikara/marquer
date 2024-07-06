@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presets</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            margin-top: 20px;
+            color: #333;
+        }
+
+        .preset-container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .preset {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .preset:last-child {
+            border-bottom: none;
+        }
+
+        .preset strong {
+            flex-grow: 1;
+        }
+
+        .preset button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+
+        .deleteButton {
+            background-color: #ff4d4d;
+            color: white;
+        }
+
+        .editButton {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .saveButton {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .sendButton {
+            background-color: #ffa500;
+            color: white;
+        }
+
+        .creatorButton {
+            background-color: #43bec2;
+            color: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .action-buttons button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 600px) {
+            .preset-container {
+                width: 90%;
+            }
+
+            .preset button {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .action-buttons button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Presets</h1>
+    <div id="presetList" class="preset-container"></div>
+    <div class="action-buttons">
+        <button id="goToCreatorButton" class="creatorButton" onclick="goToCreator()">Go to Creator Page</button>
+        <button class="sendButton" onclick="sendToESP32()">Send to ESP32</button>
+    </div>
+
+    <script>
+        function loadPresets() {
+            const presetList = document.getElementById('presetList');
+            const presets = JSON.parse(localStorage.getItem('presets')) || [];
+            presetList.innerHTML = '';
+
+            presets.forEach((preset, index) => {
+                const presetDiv = document.createElement('div');
+                presetDiv.className = 'preset';
+                presetDiv.innerHTML = `
+                    <strong>${preset.name}</strong>
+                    <button class="editButton" onclick="editPreset(${index})">Edit</button>
+                    <button class="deleteButton" onclick="deletePreset(${index})">Delete</button>
+                `;
+                presetList.appendChild(presetDiv);
+            });
+        }
+
+        function deletePreset(index) {
+            const presets = JSON.parse(localStorage.getItem('presets')) || [];
+            presets.splice(index, 1);
+            localStorage.setItem('presets', JSON.stringify(presets));
+            loadPresets();
+        }
+
+        function editPreset(index) {
+            const presets = JSON.parse(localStorage.getItem('presets')) || [];
+            const preset = presets[index];
+            const newName = prompt("Edit preset name:", preset.name);
+            if (newName) {
+                preset.name = newName;
+                localStorage.setItem('presets', JSON.stringify(presets));
+                loadPresets();
+            }
+        }
+
+        function goToCreator() {
+            window.location.href = 'index.html';
+        }
+
+        async function sendToESP32() {
+            const presets = JSON.parse(localStorage.getItem('presets')) || [];
+            try {
+                const response = await fetch('http://your-esp32-ip-address/send-presets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(presets)
+                });
+                if (response.ok) {
+                    alert('Presets sent to ESP32 successfully!');
+                } else {
+                    alert('Failed to send presets to ESP32.');
+                }
+            } catch (error) {
+                console.error('Error sending presets to ESP32:', error);
+                alert('Error sending presets to ESP32.');
+            }
+        }
+
+        window.onload = loadPresets;
+    </script>
+
+</body>
+</html>

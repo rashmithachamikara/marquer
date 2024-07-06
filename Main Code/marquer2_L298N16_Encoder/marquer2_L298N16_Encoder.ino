@@ -108,7 +108,7 @@ int turnDirection;
 int turning = 0; //Context switch. Change to more sophisticated method later
 //int turnSpeedA = 0; //Caclulation variables. Probably unnecessary
 //int turnSpeedB = 0; //Caclulation variables. Probably unnecessary
-int turnBaseSpeed = 100; //Speed for turning
+int turnBaseSpeed = 60; //Speed for turning. 100 for 7v+ (2x 3.7v). 60 for 12v+ (3x 3.7v)
 double turnError;
 double turnDerivative;
 double turnIntegral = 0;

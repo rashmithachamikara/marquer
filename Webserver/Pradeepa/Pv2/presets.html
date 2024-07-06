@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presets</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            margin-top: 20px;
+            color: #333;
+        }
+
+        .preset-container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .preset {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .preset:last-child {
+            border-bottom: none;
+        }
+
+        .preset strong {
+            flex-grow: 1;
+        }
+
+        .preset button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+
+        .deleteButton {
+            background-color: #ff4d4d;
+            color: white;
+        }
+
+        .renameButton {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .editShapeButton {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .previewButton {
+            background-color: #6a0dad;
+            color: white;
+        }
+
+        .creatorButton {
+            background-color: #43bec2;
+            color: white;
+        }
+
+        .sendButton {
+            background-color: #ffa500;
+            color: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .action-buttons button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 600px) {
+            .preset-container {
+                width: 90%;
+            }
+
+            .preset button {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .action-buttons button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            display: flex; /* New */
+            flex-direction: column; /* New */
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+        canvas#editPreviewCanvas {
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin-top: 20px;
+            background-color: #e6f7ff;
+            max-width: 100%;
+            max-height: 100%;
+            flex-grow: 1; /* New */
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .form-group input[type="text"], .form-group select {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-actions {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .form-actions button {
+            margin-left: 10px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Presets</h1>
+    <div id="presetList" class="preset-container"></div>
+    <div class="action-buttons">
+        <button id="goToCreatorButton" class="creatorButton" onclick="goToCreator()">Go to Creator Page</button>
+        <button class="sendButton" onclick="sendToESP32()">Send to ESP32</button>
+    </div>
+
+    <!-- The Modal -->
+    <div id="editShapeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditShapeModal()">&times;</span>
+            <h2>Edit Shape</h2>
+            <div id="editShapeForm">
+                <!-- Form fields will be dynamically generated here -->
+            </div>
+            <canvas id="editPreviewCanvas" width="400" height="400"></canvas> <!-- Added canvas for preview -->
+            <div class="form-actions">
+                <button onclick="saveShapeChanges()">Save Changes</button>
+                <button onclick="closeEditShapeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closePreviewModal()">&times;</span>
+            <h2>Preset Preview</h2>
+            <canvas id="previewCanvas" width="400" height="400"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let currentEditIndex = null; // Track which preset is being edited
+
+        function loadPresets() {
+            const presetList = document.getElementById('presetList');
+            const presets = JSON.parse(localStorage.getItem('presets')) || [];
+            presetList.innerHTML = '';
+
+            presets.forEach((preset, index) => {
+                const presetDiv = document.createElement('div');
+                presetDiv.className = 'preset';
+                presetDiv.innerHTML = `
+                    <strong>${preset.name}</strong>
+                    <button class="previewButton" onclick="previewPreset(${index})">Preview</button>
+                    <button class="renameButton" onclick="editPreset(${index})">Rename</button>
+                    <button class="editShapeButton" onclick="openEditShapeModal(${index})">Edit Shape</button>
+                    <button class="deleteButton" onclick="deletePreset(${index})">Delete</button>
+                `;
+                presetList.appendChild(presetDiv);
+            });
+        }
+
+        function deletePreset(index) {
+            const presets = JSON.parse(localStorage.getItem('presets')) || [];
+            presets.splice(index, 1);
+            localStorage.setItem('presets', JSON.stringify(presets));
+            loadPresets();
+        }
+
+        function editPreset(index) {
+            const presets = JSON.parse(localStorage.getItem('presets')) || [];
+            const preset = presets[index];
+            const newName = prompt("Rename preset:", preset.name);
+            if (newName) {
+                preset.name = newName;
+                localStorage.setItem('presets', JSON.stringify(presets));
+                loadPresets();
+            }
+        }
+
+        function openEditShapeModal(index) {
+            currentEditIndex = index;
+            const presets = JSON.parse(localStorage.getItem('presets')) || [];
+            const preset = presets[index];
+
+            // Dynamically build the form for editing shape instructions
+            const formContainer = document.getElementById('editShapeForm');
+            formContainer.innerHTML = ''; // Clear previous content
+
+            preset.instructions.forEach((instruction, idx) => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'form-group';
+                groupDiv.innerHTML = `
+                    <label for="direction${idx}">Direction:</label>
+                    <select id="direction${idx}" name="direction${idx}">
+                        <option value="North">North</option>
+                        <option value="South">South</option>
+                        <option value="East">East</option>
+                        <option value="West">West</option>
+                        <option value="Northeast">Northeast</option>
+                        <option value="Northwest">Northwest</option>
+                        <option value="Southeast">Southeast</option>
+                        <option value="Southwest">Southwest</option>
+                    </select>
+                    <label for="distance${idx}">Distance:</label>
+                    <input type="text" id="distance${idx}" name="distance${idx}" value="${instruction.distance}">
+                    <button onclick="deleteInstruction(${idx})">Delete</button>
+                `;
+                formContainer.appendChild(groupDiv);
+
+                // Set selected option in dropdown
+                const directionSelect = document.getElementById(`direction${idx}`);
+                directionSelect.value = instruction.direction;
+            });
+
+            // Add button for adding new instruction
+            const addInstructionBtn = document.createElement('button');
+            addInstructionBtn.textContent = 'Add Instruction';
+            addInstructionBtn.onclick = addInstruction;
+            formContainer.appendChild(addInstructionBtn);
+
+            // Show the modal
+            document.getElementById('editShapeModal').style.display = "flex";
+
+            // Show the preview when editing shape
+            drawEditPreview(preset.instructions);
+        }
+
+        function drawEditPreview(instructions) {
+            const canvas = document.getElementById('editPreviewCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Define padding around the canvas
+            const padding = 20;
+            const canvasWidth = canvas.width - 2 * padding;
+            const canvasHeight = canvas.height - 2 * padding;
+
+            let currentX = padding + canvasWidth / 2;
+            let currentY = padding + canvasHeight / 2;
+
+            ctx.beginPath();
+            ctx.moveTo(currentX, currentY);
+
+            instructions.forEach(instruction => {
+                switch (instruction.direction) {
+                    case 'North':
+                        currentY -= parseInt(instruction.distance);
+                        break;
+                    case 'South':
+                        currentY += parseInt(instruction.distance);
+                        break;
+                    case 'East':
+                        currentX += parseInt(instruction.distance);
+                        break;
+                    case 'West':
+                        currentX -= parseInt(instruction.distance);
+                        break;
+                    case 'Northeast':
+                        currentX += parseInt(instruction.distance);
+                        currentY -= parseInt(instruction.distance);
+                        break;
+                    case 'Northwest':
+                        currentX -= parseInt(instruction.distance);
+                        currentY -= parseInt(instruction.distance);
+                        break;
+                    case 'Southeast':
+                        currentX += parseInt(instruction.distance);
+                        currentY += parseInt(instruction.distance);
+                        break;
+                    case 'Southwest':
+                        currentX -= parseInt(instruction.distance);
+                        currentY += parseInt(instruction.distance);
+                        break;
+                    default:
+                        break;
+                }
+
+                // Limit within canvas bounds
+                currentX = Math.max(padding, Math.min(canvas.width - padding, currentX));
+                currentY = Math.max(padding, Math.min(canvas.height - padding, currentY));
+
+                ctx.lineTo(currentX, currentY);
+            });
+
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function addInstruction() {
+            const formContainer = document.getElementById('editShapeForm');
+            const newIdx = formContainer.querySelectorAll('.form-group').length; // Get next index
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'form-group';
+            groupDiv.innerHTML = `
+                <label for="direction${newIdx}">Direction:</label>
+                <select id="direction${newIdx}" name="direction${newIdx}">
+                    <option value="North">North</option>
+                    <option value="South">South</option>
+                    <option value="East">East</option>
+                    <option value="West">West</option>
+                    <option value="Northeast">Northeast</option>
+                    <option value="Northwest">Northwest</option>
+                    <option value="Southeast">Southeast</option>
+                    <option value="Southwest">Southwest</option>
+                </select>
+                <label for="distance${newIdx}">Distance:</label>
+                <input type="text" id="distance${newIdx}" name="distance${newIdx}" value="">
+                <button onclick="deleteInstruction(${newIdx})">Delete</button>
+            `;
+            formContainer.appendChild(groupDiv);
+        }
+
+        function deleteInstruction(index) {
+            const formGroups = document.querySelectorAll('#editShapeForm .form-group');
+            if (index >= 0 && index < formGroups.length) {
+                formGroups[index].remove();
+            }
+        }
+
+        function saveShapeChanges() {
+            const presets = JSON.parse(localStorage.getItem('presets')) || [];
+            const preset = presets[currentEditIndex];
+
+            // Update instructions based on form data
+            const formGroups = document.querySelectorAll('#editShapeForm .form-group');
+            preset.instructions = Array.from(formGroups).map(group => {
+                return {
+                    direction: group.querySelector('select').value,
+                    distance: group.querySelector('input').value
+                };
+            });
+
+            localStorage.setItem('presets', JSON.stringify(presets));
+            closeEditShapeModal();
+            loadPresets();
+        }
+
+        function drawPreview(instructions) {
+            const canvas = document.getElementById('previewCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Define padding around the canvas
+            const padding = 20;
+            const canvasWidth = canvas.width - 2 * padding;
+            const canvasHeight = canvas.height - 2 * padding;
+
+            let currentX = padding + canvasWidth / 2;
+            let currentY = padding + canvasHeight / 2;
+
+            ctx.beginPath();
+            ctx.moveTo(currentX, currentY);
+
+            instructions.forEach(instruction => {
+                switch (instruction.direction) {
+                    case 'North':
+                        currentY -= parseInt(instruction.distance);
+                        break;
+                    case 'South':
+                        currentY += parseInt(instruction.distance);
+                        break;
+                    case 'East':
+                        currentX += parseInt(instruction.distance);
+                        break;
+                    case 'West':
+                        currentX -= parseInt(instruction.distance);
+                        break;
+                    case 'Northeast':
+                        currentX += parseInt(instruction.distance);
+                        currentY -= parseInt(instruction.distance);
+                        break;
+                    case 'Northwest':
+                        currentX -= parseInt(instruction.distance);
+                        currentY -= parseInt(instruction.distance);
+                        break;
+                    case 'Southeast':
+                        currentX += parseInt(instruction.distance);
+                        currentY += parseInt(instruction.distance);
+                        break;
+                    case 'Southwest':
+                        currentX -= parseInt(instruction.distance);
+                        currentY += parseInt(instruction.distance);
+                        break;
+                    default:
+                        break;
+                }
+
+                // Limit within canvas bounds
+                currentX = Math.max(padding, Math.min(canvas.width - padding, currentX));
+                currentY = Math.max(padding, Math.min(canvas.height - padding, currentY));
+
+                ctx.lineTo(currentX, currentY);
+            });
+
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function openPreviewModal() {
+            document.getElementById('previewModal').style.display = "flex";
+        }
+
+        function closePreviewModal() {
+            document.getElementById('previewModal').style.display = "none";
+        }
+
+        function closeEditShapeModal() {
+            document.getElementById('editShapeModal').style.display = "none";
+        }
+
+        function previewPreset(index) {
+            const presets = JSON.parse(localStorage.getItem('presets')) || [];
+            const preset = presets[index];
+            drawPreview(preset.instructions);
+            openPreviewModal();
+        }
+
+        function goToCreator() {
+            // Redirect to your creator page or perform desired action
+            window.location.href = 'index.html';
+            alert('Redirecting to Creator Page...');
+        }
+
+        function sendToESP32() {
+            // Implement sending presets to ESP32 or perform desired action
+            const presets = JSON.parse(localStorage.getItem('presets')) || [];
+            console.log(presets);
+            alert('Sending presets to ESP32...');
+        }
+
+        window.onload = function () {
+            loadPresets();
+        };
+    </script>
+
+</body>
+</html>

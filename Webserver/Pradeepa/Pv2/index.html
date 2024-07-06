@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Path Preview and Preset Manager</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #2f4f4f;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+        label {
+            font-weight: bold;
+            color: #2f4f4f;
+        }
+        select, input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            margin: 10px 5px 0 0;
+            transition: background-color 0.3s ease;
+        }
+        #addButton {
+            background-color: #28a745;
+        }
+        #addButton:hover {
+            background-color: #218838;
+        }
+        #savePresetButton {
+            background-color: #007bff;
+        }
+        #savePresetButton:hover {
+            background-color: #0069d9;
+        }
+        #goToPresetsButton {
+            background-color: #ff8c00;
+        }
+        #goToPresetsButton:hover {
+            background-color: #e07b00;
+        }
+        canvas {
+            border: 2px solid #2f4f4f;
+            border-radius: 10px;
+            margin-top: 20px;
+            background-color: #e6f7ff;
+            max-width: 100%;
+            width: 600px;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Set Direction and Distance</h1>
+        
+        <label for="directionInput">Select Direction:</label>
+        <select id="directionInput">
+            <option value="Top">Top</option>
+            <option value="Bottom">Bottom</option>
+            <option value="North">North</option>
+            <option value="South">South</option>
+            <option value="East">East</option>
+            <option value="West">West</option>
+            <option value="Northeast">Northeast</option>
+            <option value="Northwest">Northwest</option>
+            <option value="Southeast">Southeast</option>
+            <option value="Southwest">Southwest</option>
+        </select>
+
+        <label for="distanceInput">Enter Distance (meters):</label>
+        <input type="number" id="distanceInput" placeholder="Enter distance in meters">
+        
+        <button id="addButton" onclick="addInstruction()">Add Instruction</button>
+        <button id="savePresetButton" onclick="savePreset()">Save Preset</button>
+        <button id="goToPresetsButton" onclick="goToPresets()">Go to Presets</button>
+
+        <p id="output"></p>
+        <canvas id="previewCanvas"></canvas>
+    </div>
+
+    <script>
+        let instructions = [];
+
+        function addInstruction() {
+            const direction = document.getElementById('directionInput').value;
+            const distance = document.getElementById('distanceInput').value;
+            if (distance) {
+                instructions.push({ direction, distance: parseFloat(distance) });
+                updatePreview();
+                document.getElementById('distanceInput').value = ''; // Clear input
+            } else {
+                alert('Please enter a distance in meters.');
+            }
+        }
+
+        function updatePreview() {
+            drawPreview(instructions);
+        }
+
+        function drawPreview(instructions) {
+            const canvas = document.getElementById('previewCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+            // Calculate the scaling factor and padding
+            const padding = 20; // Add padding around the path
+            let maxX = 0, maxY = 0, minX = 0, minY = 0;
+            let currentX = 0, currentY = 0;
+            instructions.forEach(instruction => {
+                let { direction, distance } = instruction;
+                switch (direction) {
+                    case 'Top':
+                    case 'North':
+                        currentY -= distance;
+                        break;
+                    case 'Bottom':
+                    case 'South':
+                        currentY += distance;
+                        break;
+                    case 'East':
+                        currentX += distance;
+                        break;
+                    case 'West':
+                        currentX -= distance;
+                        break;
+                    case 'Northeast':
+                        currentX += distance * Math.cos(Math.PI / 4);
+                        currentY -= distance * Math.sin(Math.PI / 4);
+                        break;
+                    case 'Northwest':
+                        currentX -= distance * Math.cos(Math.PI / 4);
+                        currentY -= distance * Math.sin(Math.PI / 4);
+                        break;
+                    case 'Southeast':
+                        currentX += distance * Math.cos(Math.PI / 4);
+                        currentY += distance * Math.sin(Math.PI / 4);
+                        break;
+                    case 'Southwest':
+                        currentX -= distance * Math.cos(Math.PI / 4);
+                        currentY += distance * Math.sin(Math.PI / 4);
+                        break;
+                }
+                maxX = Math.max(maxX, currentX);
+                maxY = Math.max(maxY, currentY);
+                minX = Math.min(minX, currentX);
+                minY = Math.min(minY, currentY);
+            });
+
+            const canvasWidth = canvas.width - padding * 2;
+            const canvasHeight = canvas.height - padding * 2;
+            const pathWidth = maxX - minX;
+            const pathHeight = maxY - minY;
+            const scale = Math.min(canvasWidth / pathWidth, canvasHeight / pathHeight) / 2;
+
+            // Reset coordinates for drawing
+            currentX = canvas.width / 2 - (pathWidth * scale) / 2 + padding;
+            currentY = canvas.height / 2 - (pathHeight * scale) / 2 + padding;
+            ctx.beginPath();
+            ctx.moveTo(currentX, currentY); // Start from the center of the canvas
+
+            // Mark the starting position in red
+            ctx.fillStyle = 'red';
+            ctx.fillRect(currentX - 2, currentY - 2, 4, 4);
+
+            instructions.forEach((instruction, index) => {
+                let { direction, distance } = instruction;
+                distance *= scale;
+                switch (direction) {
+                    case 'Top':
+                    case 'North':
+                        currentY -= distance;
+                        break;
+                    case 'Bottom':
+                    case 'South':
+                        currentY += distance;
+                        break;
+                    case 'East':
+                        currentX += distance;
+                        break;
+                    case 'West':
+                        currentX -= distance;
+                        break;
+                    case 'Northeast':
+                        currentX += distance * Math.cos(Math.PI / 4);
+                        currentY -= distance * Math.sin(Math.PI / 4);
+                        break;
+                    case 'Northwest':
+                        currentX -= distance * Math.cos(Math.PI / 4);
+                        currentY -= distance * Math.sin(Math.PI / 4);
+                        break;
+                    case 'Southeast':
+                        currentX += distance * Math.cos(Math.PI / 4);
+                        currentY += distance * Math.sin(Math.PI / 4);
+                        break;
+                    case 'Southwest':
+                        currentX -= distance * Math.cos(Math.PI / 4);
+                        currentY += distance * Math.sin(Math.PI / 4);
+                        break;
+                }
+                ctx.lineTo(currentX, currentY);
+
+                // Mark the destination position in blue for the last instruction
+                if (index === instructions.length - 1) {
+                    ctx.fillStyle = 'blue';
+                    ctx.fillRect(currentX - 2, currentY - 2, 4, 4);
+                }
+            });
+
+            ctx.stroke();
+        }
+
+        function savePreset() {
+            const presetName = prompt("Enter a name for this preset:");
+            if (presetName) {
+                const presets = JSON.parse(localStorage.getItem('presets')) || [];
+                presets.push({ name: presetName, instructions });
+                localStorage.setItem('presets', JSON.stringify(presets));
+                alert('Preset saved successfully!');
+                instructions = [];
+                updatePreview();
+            }
+        }
+
+        function goToPresets() {
+            window.location.href = 'presets.html';
+        }
+    </script>
+
+</body>
+</html>

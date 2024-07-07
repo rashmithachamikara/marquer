@@ -1,6 +1,8 @@
 /*  
  The Display and UI for Marquer
 
+ =========== Library information ===========
+
  Test the tft.print() viz. embedded tft.write() function
 
  This sketch used font 2, 4, 7
@@ -27,8 +29,9 @@
 TFT_eSPI tft = TFT_eSPI();  // Invoke library
 
 //variables
-int uiPage = 6;
+int uiPage = 1;
 unsigned int old_uiPage = uiPage;
+bool staticContentDrawn = false;
 
 
 void setup(void) {
@@ -84,7 +87,6 @@ void uiEngine(){
   4 - Preapring
   5 - In Progress
   6 - Task report
-
 
   */
 

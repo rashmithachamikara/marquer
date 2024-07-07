@@ -1,3 +1,9 @@
+/*
+
+4x4 Membrane Keypad with a PCF8574 I2C 8bit expander
+
+*/
+
 #include <Wire.h>
 #include <PCF8574.h>
 

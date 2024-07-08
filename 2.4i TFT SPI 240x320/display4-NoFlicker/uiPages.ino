@@ -124,6 +124,7 @@ void ui_drawPresetsPage() {
 }
 
 void drawLoadingIcon(int x, int y, int radius, int angle) {
+  tft.fillCircle(x, y, radius, TFT_WHITE); //Draw background
   tft.drawCircle(x, y, radius, TFT_GREY);  // Draw outer circle
   int x1 = x + radius * cos(radians(angle));
   int y1 = y + radius * sin(radians(angle));
@@ -268,6 +269,7 @@ void ui_drawProcessingPage() {
     tft.drawString("Preset name: " + presetName, 10, 50);  // Draw preset name
 
     // Draw "Press # to abort"
+    tft.setTextDatum(MC_DATUM);  // Set text datum to top-left corner
     tft.setTextColor(TFT_GREY, TFT_WHITE);  // Set text color to grey with white background
     tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
     //tft.setTextDatum(TL_DATUM);  // Reset text datum to top-left corner
@@ -276,6 +278,7 @@ void ui_drawProcessingPage() {
   
   //=== Animations ===
   // Draw current step information
+  tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
   tft.drawString("Current step " + String(currentStep) + "/" + String(totalSteps), 10, 70);  // Draw current step info
   tft.drawString("Current step: " + currentStepAction, 10, 90);  // Draw current step action
 

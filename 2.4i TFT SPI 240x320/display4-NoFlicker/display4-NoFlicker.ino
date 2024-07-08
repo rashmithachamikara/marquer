@@ -99,27 +99,33 @@ void uiEngine(){
         case 1: 
           uiFrequency = 10000;
           ui_drawHomeScreen();
+          staticContentDrawn = true;
           break;
           //Switch for page 1
         case 2:
           uiFrequency = 10000;
           ui_drawManualModePage();
+          staticContentDrawn = true;
           break;
         case 3:
           uiFrequency = 10000;
           ui_drawPresetsPage();
+          staticContentDrawn = true;
           break;
         case 4:
-          uiFrequency = 100;
+          uiFrequency = 60;
           ui_drawPreparingPage();
+          staticContentDrawn = true;
           break;
         case 5:
-          uiFrequency = 1000;
+          uiFrequency = 60;
           ui_drawProcessingPage();
+          staticContentDrawn = true;
           break;
         case 6:
           uiFrequency = 10000;
           ui_drawTaskReportPage();
+          staticContentDrawn = true;
           break;
         default:
           uiPage = 1;
@@ -141,6 +147,9 @@ void uiEngine(){
     int number = input - '0'; // Convert ASCII to integer value
 
     Serial.println("Invalid input. Enter 1, 2, or 3.");
+
+    //Set static update to 0
+    staticContentDrawn = false;
 
     // ========== Inputs ========= Execute function based on the input number
     switch (uiPage){

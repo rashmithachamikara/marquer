@@ -216,79 +216,148 @@ void ui_drawPreparingPage() {
   tft.fillRect(50, 180, progress * 2.2, 20, TFT_BLUE);  // Fill screen with yellow
 }
 
-void ui_drawInProgressPage() {
-  // === Static Content ===
-  if (staticContentDrawn == false) {
-    tft.fillScreen(TFT_WHITE);  // Fill the screen with white color
+void drawSpeedometer(int x, int y, int radius, int speed) {
+  tft.fillCircle(x, y, radius, TFT_WHITE);  // Draw background fill. Clear last needle
+  tft.drawCircle(x, y, radius, TFT_BLACK);  // Draw outer circle
+  tft.fillCircle(x, y, 2, TFT_RED);  // Draw center dot
 
-    // Draw "In Progress" header
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
-    tft.setFreeFont(&FreeSans18pt7b);  // Set font to the same as Preparing header
-    tft.setTextDatum(MC_DATUM);  // Set text datum to middle center
-    tft.drawString("In Progress", 160, 30);  // Draw string in the middle of the screen
+  // Draw speed marks and labels
+  tft.setTextFont(1);  // Set font to font 2
+  tft.setTextSize(1); // This sets the text size to the smallest
+  tft.setTextDatum(MC_DATUM);  // Set text datum to middle center
+  for (int i = 0; i <= 100; i += 10) {
+    int angle = map(i, 0, 100, -120, 120);
+    int x1 = x + (radius - 10) * cos(radians(angle));
+    int y1 = y + (radius - 10) * sin(radians(angle));
+    int x2 = x + radius * cos(radians(angle));
+    int y2 = y + radius * sin(radians(angle));
+    tft.drawLine(x1, y1, x2, y2, TFT_BLACK);
 
-    // Draw Current task and Progress
-    int currentTask = 3;  // Example value for current task
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
-    tft.setFreeFont(&FreeSans12pt7b);  // Set font to a bit large font
-    tft.drawString("Current task: " + String(currentTask), 160, 130);  // Draw current task in the middle
-    tft.drawString("Progress", 160, 170);  // Draw Progress in the middle
-
-    // Draw "Press # to pause"
-    tft.setTextColor(TFT_GREY, TFT_WHITE);  // Set text color to grey with white background
-    tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
-    tft.drawString("Press # to pause", 160, 300);  // Draw string in the middle bottom
-
-    staticContentDrawn = true;  // Set static content drawn to true
+    // Draw labels only for 0 and 100
+    if (i == 0 || i == 50 || i == 100) {
+      int labelX = x + (radius - 12) * cos(radians(angle));
+      int labelY = y + (radius - 12) * sin(radians(angle));
+      char label[4];  // Buffer to hold the label string
+      sprintf(label, "%d", i);  // Convert the speed value to a string
+      tft.drawString(label, labelX, labelY);  // Draw the speed label
+    }
   }
 
-  //=== Animations ===
-  // Draw progress bar
-  int progress = 75;  // Example value for progress
-  tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
-  tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
-  tft.setTextDatum(MC_DATUM);  // Set text datum to middle center
-  tft.drawString("Progress", 160, 200);  // Draw string in the middle
-  tft.drawRect(50, 220, 220, 20, TFT_BLACK);  // Draw rectangle in the bottom 
-  tft.fillRect(50, 220, progress * 2.2, 20, TFT_BLUE);  // Fill screen with yellow
+  int angle = map(speed, 0, 100, -120, 120);  // Map speed to angle
+  int x1 = x + (radius-4) * cos(radians(angle));
+  int y1 = y + (radius-4) * sin(radians(angle));
+  tft.drawLine(x, y, x1, y1, TFT_RED);  // Draw needle
+  tft.drawCircle(x, y, radius, TFT_BLACK);  // Draw outer circle again to cover needle hits
+}
+
+void drawRotatingAnimation(int x, int y, int radius, int angle) {
+  tft.fillCircle(x, y, radius, TFT_WHITE);  // Clear previous
+  tft.drawCircle(x, y, radius, TFT_BLACK);  // Draw outer circle
+  tft.fillCircle(x, y, 2, TFT_RED);  // Draw center dot
+  
+  // Draw angle marks
+  for (int i = 0; i < 360; i += 30) {
+    int angleMark = i - 90;
+    int x1 = x + (radius - 10) * cos(radians(angleMark));
+    int y1 = y + (radius - 10) * sin(radians(angleMark));
+    int x2 = x + radius * cos(radians(angleMark));
+    int y2 = y + radius * sin(radians(angleMark));
+    tft.drawLine(x1, y1, x2, y2, TFT_BLACK);
+  }
+  
+  // Draw rotating line
+  int x1 = x + (radius-4) * cos(radians(angle - 90));
+  int y1 = y + (radius-4) * sin(radians(angle - 90));
+  tft.drawLine(x, y, x1, y1, TFT_RED);  // Draw rotating line
 }
 
 void ui_drawProcessingPage() {
+  // Variables
+  String presetName = "My Preset 1";  // Example preset name
+  int currentStep = 3;  // Example current step
+  int totalSteps = 5;  // Example total steps
+  String currentStepAction = "Moving 100cm";  // Example current step action
+  static int speed = 30;  // Speed in cm/s
+  int distanceCovered = 20;  // Distance covered in cm
+  int distanceTarget = 50;  // Distance target in cm
+  String direction = "left";  // Direction for rotating
+  String penStatus = "drawing";  // Pen status
+
+  static int angle = 0;
+  static int state = 0;
+
   // === Static Content ===
-  if (staticContentDrawn == false) {
+  if (staticContentDrawn==false){
     tft.fillScreen(TFT_WHITE);  // Fill the screen with white color
 
     // Draw "Processing" header
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
-    tft.setFreeFont(&FreeSans18pt7b);  // Set font to the same as In Progress header
+    tft.setTextColor(TFT_BLUE, TFT_WHITE);  // Set text color to blue with white background
     tft.setTextDatum(MC_DATUM);  // Set text datum to middle center
-    tft.drawString("Processing", 160, 30);  // Draw string in the middle of the screen
+    tft.setFreeFont(&FreeSansBold18pt7b);  // Set font to a large bold font
+    tft.drawString("Processing", 160, 20);  // Draw string in the middle of the screen
 
-    // Draw Current step and Progress
-    int currentStep = 4;  // Example value for current step
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
-    tft.setFreeFont(&FreeSans12pt7b);  // Set font to a bit large font
-    tft.drawString("Current step: " + String(currentStep), 160, 130);  // Draw current step in the middle
-    tft.drawString("Progress", 160, 170);  // Draw Progress in the middle
+    // Draw preset name
+    tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color
+    tft.setTextFont(2);  // Set font to font 2
+    tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
+    tft.drawString("Preset name: " + presetName, 10, 50);  // Draw preset name
 
-    // Draw "Press # to stop"
+    // Draw "Press # to abort"
+    tft.setTextDatum(MC_DATUM);  // Set text datum to top-left corner
     tft.setTextColor(TFT_GREY, TFT_WHITE);  // Set text color to grey with white background
     tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
-    tft.drawString("Press # to stop", 160, 300);  // Draw string in the middle bottom
-
-    staticContentDrawn = true;  // Set static content drawn to true
+    //tft.setTextDatum(TL_DATUM);  // Reset text datum to top-left corner
+    tft.drawString("Press # to abort", 160, 230, 2);  // Draw string at the bottom
+  }
+  
+  //=== Animations ===
+  //Adjust example variables
+  if (state == 0) {
+    speed += random(-6,6);  // Increment angle for rotating animation
+    if (speed < 0) speed = 0;  // Reset angle after a full rotation
+    if (speed > 90) speed = 90;  // Reset angle after a full rotation
+  }
+  if (state == 1) {
+    angle += 2;  // Increment angle for rotating animation
+    if (angle > 90) angle = 0;  // Reset angle after a full rotation
   }
 
-  //=== Animations ===
-  // Draw progress bar
-  int progress = 90;  // Example value for progress
-  tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
-  tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
-  tft.setTextDatum(MC_DATUM);  // Set text datum to middle center
-  tft.drawString("Progress", 160, 200);  // Draw string in the middle
-  tft.drawRect(50, 220, 220, 20, TFT_BLACK);  // Draw rectangle in the bottom 
-  tft.fillRect(50, 220, progress * 2.2, 20, TFT_BLUE);  // Fill screen with yellow
+  // Draw current step information
+  tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
+  tft.drawString("Current step: " + String(currentStep) + "/" + String(totalSteps) + "         ", 10, 70);  // Draw current step info
+  tft.drawString("Active task:  " + currentStepAction + "         ", 10, 90);  // Draw current step action
+
+  if (state == 0) {
+    // Draw Straight motion information
+    tft.setTextColor(TFT_MAROON, TFT_WHITE);  // Set text color
+    tft.drawString("Straight motion", 120, 125);  // Draw Straight motion label
+    // Draw Speedometer
+    drawSpeedometer(50, 162, 40, speed);  // drawSpeedometer(x, y, r, z) Draws a speedometer at (x, y) with radius r. needle at z
+
+    tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color
+    tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
+    tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
+    tft.drawString("Speed: " + String(speed) + "cm/s      ", 120, 145);  // Draw speed in text
+    // Draw Distance
+    tft.drawString("Distance: " + String(distanceCovered) + "/" + String(distanceTarget) + " cm      ", 120, 165);  // Draw distance
+    tft.drawString("Pen Status: " + penStatus, 120, 185);  // Draw pen status
+  } else if (state == 1) {
+    // Draw Rotating information
+    tft.setTextColor(TFT_MAROON, TFT_WHITE);  // Set text color
+    tft.drawString("Rotating", 120, 125);  // Draw Rotating label
+    //Draw rotation meter
+    drawRotatingAnimation(50, 162, 40, angle);  // Draw rotating animation at (x, y)
+
+    tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color
+    tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
+    tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
+    tft.drawString("Angle: " + String(angle) + " degrees", 120, 145);  // Draw angle
+    tft.drawString("Direction: " + direction, 120, 165);  // Draw direction
+    tft.drawString("Pen Status: " + penStatus, 120, 185);  // Draw pen status
+  }
+
 }
+
 
 void ui_drawTaskReportPage() {
   // === Static Content ===

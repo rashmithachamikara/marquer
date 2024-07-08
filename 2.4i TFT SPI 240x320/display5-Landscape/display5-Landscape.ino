@@ -29,7 +29,7 @@
 TFT_eSPI tft = TFT_eSPI();  // Invoke library
 
 //variables
-int uiPage = 5;
+int uiPage = 6;
 unsigned int old_uiPage = uiPage;
 bool staticContentDrawn = false;
 bool uiDebug = true;
@@ -47,7 +47,7 @@ void setup(void) {
   tft.init();
   tft.setRotation(3);
   tft.fillScreen(TFT_WHITE);
-  ui_drawProcessingPage();
+  ui_drawTaskReportPage();
   
 }
 

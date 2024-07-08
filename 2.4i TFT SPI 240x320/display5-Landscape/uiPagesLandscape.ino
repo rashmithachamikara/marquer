@@ -358,40 +358,42 @@ void ui_drawProcessingPage() {
 
 }
 
-
 void ui_drawTaskReportPage() {
+  // Example Variables
+  String presetName = "Moving 100cm";  // Example preset name
+  String timeTaken = "12 min 30 sec";  // Example time taken
+  String distanceTravelled = "150 cm";  // Example distance travelled
+  String avgSpeed = "12.5 cm/s";  // Example average speed
+
   // === Static Content ===
-  if (staticContentDrawn == false) {
+  if (staticContentDrawn==false){
     tft.fillScreen(TFT_WHITE);  // Fill the screen with white color
 
     // Draw "Task Report" header
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
-    tft.setFreeFont(&FreeSans18pt7b);  // Set font to the same as Processing header
+    tft.setTextColor(TFT_BLUE, TFT_WHITE);  // Set text color to blue with white background
     tft.setTextDatum(MC_DATUM);  // Set text datum to middle center
-    tft.drawString("Task Report", 160, 30);  // Draw string in the middle of the screen
+    tft.setFreeFont(&FreeSansBold18pt7b);  // Set font to a large bold font
+    tft.drawString("Task report", 160, 20);  // Draw string in the middle of the screen
 
-    // Draw Task summary and Report
-    int taskSummary = 5;  // Example value for task summary
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
-    tft.setFreeFont(&FreeSans12pt7b);  // Set font to a bit large font
-    tft.drawString("Task summary: " + String(taskSummary), 160, 130);  // Draw task summary in the middle
-    tft.drawString("Report", 160, 170);  // Draw report in the middle
-
-    // Draw "Press * to go back" (small grey text)
-    tft.setTextColor(TFT_GREY, TFT_WHITE);  // Set text color to grey with white background
+    // Draw preset name
+    tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to blue with white background
     tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
-    tft.drawString("Press * to go back", 160, 300);  // Draw string in the middle bottom
+    tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
+    tft.drawString("Preset name: " + presetName, 10, 60);  // Draw preset name
 
-    staticContentDrawn = true;  // Set static content drawn to true
+    // Draw time taken
+    tft.drawString("Time taken: " + timeTaken, 10, 80);  // Draw time taken
+
+    // Draw distance travelled
+    tft.drawString("Distance travelled: " + distanceTravelled, 10, 100);  // Draw distance travelled
+
+    // Draw average speed
+    tft.drawString("Avg. Speed: " + avgSpeed, 10, 120);  // Draw average speed
+
+    // Draw "Press * to return to menu"
+    tft.setTextColor(TFT_GREY, TFT_WHITE);  // Set text color to grey with white background
+    tft.setTextDatum(MC_DATUM);  // Set text datum to top-left corner
+    tft.drawString("Press * to return to main menu", 160, 220, 2);  // Draw string at the bottom
   }
-
-  //=== Animations ===
-  // Draw task details
-  tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
-  tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
-  tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
-  tft.drawString("Task details:", 20, 200);  // Draw string
-  tft.drawString("- Detail 1", 40, 230);  // Draw string
-  tft.drawString("- Detail 2", 40, 250);  // Draw string
-  tft.drawString("- Detail 3", 40, 270);  // Draw string
+  
 }

@@ -16,10 +16,12 @@ Changed PID system to run in realtime with 50ms dt clock
 Count Distance from wheel encoders
 Introuced a 50ms delay in main loop to avoid crashes and wifi usage induced power failures
 Send data over wifi in a 500ms delta clock interval
+Made the robot move a specified distance then stop
 
 Todo
+- Calibrate distance moving system. Probably add proportional control
 - Create a context system
-- Make robot move a specified distance then stop
+
 
 ===============================================================
 
@@ -131,6 +133,7 @@ double overshootMargin = 3;
 //Distance Moving Variables
 bool distanceMoving = false; //Context switch. Change to more sophisticated method later
 double targetDistance = 0;
+int movingBaseSpeed = 100;
 
 
 //===========================
@@ -305,10 +308,10 @@ void loop() {
 void distanceMove(){
   if (wheelDistance < targetDistance){
     if (speedA < minPidSpeed){
-      speedA = minPidSpeed+5; //Make speed a bit more than pid baseline
+      speedA = movingBaseSpeed; //Make speed a bit more than pid baseline
     }
     if (speedB < minPidSpeed){
-      speedB = minPidSpeed+5; //Make speed a bit more than pid baseline
+      speedB = movingBaseSpeed; //Make speed a bit more than pid baseline
     }
   } else {
     //Active break

@@ -125,8 +125,16 @@ double turnErrorMargin = 2;
 unsigned long turnCompletionTime = 0;
 bool checkingOvershoot = false;
 double overshootMargin = 3;
+//===========================
+
+// ========= Distance moving =========
+//Distance Moving Variables
+bool distanceMoving = false; //Context switch. Change to more sophisticated method later
+double targetDistance = 0;
+
 
 //===========================
+
 
 void setup() {
   Serial.begin(115200);
@@ -222,10 +230,19 @@ void loop() {
 
   //========= Turn =========
   if (turning == 1){
-    Serial.println("Hit MainLoop");
+    //Serial.println("Hit MainLoop");
     turn();
   }
   //===========================
+
+  //========= Distance moving =========
+  if (distanceMoving){
+    //Serial.println("Hit MainLoop");
+    distanceMove();
+  }
+  //===========================
+
+
 
   //========= L298N =========
   // Control motor direction and speed
@@ -268,7 +285,8 @@ void loop() {
     // WebPrint(", DT:"+String(wheelDistance));
     // WebPrint(", yaw:"+String(yaw));
 
-    WebPrintln("sL:"+String(speedB)+
+    WebPrintln(
+                "sL:"+String(speedB)+
                 ", sR:"+String(speedA)+
                 ", DT:"+String(wheelDistance)+
                 ", yaw:"+String(yaw)
@@ -282,6 +300,34 @@ void loop() {
   }
 
   delay(50); // Delays are not used anymore!
+}
+
+void distanceMove(){
+  if (wheelDistance < targetDistance){
+    if (speedA < minPidSpeed){
+      speedA = minPidSpeed+5; //Make speed a bit more than pid baseline
+    }
+    if (speedB < minPidSpeed){
+      speedB = minPidSpeed+5; //Make speed a bit more than pid baseline
+    }
+  } else {
+    //Active break
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, HIGH);
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, HIGH);
+    delay(10);
+    //Halt after moving
+    speedA = 0;
+    speedB = 0;
+    analogWrite(ENA, speedA);
+    analogWrite(ENB, speedB);
+    reverseA = false;
+    reverseB = false;
+    //Print debug stuff then set flag
+    WebPrint("Moved a distance of "+String(wheelDistance)+"cm.");
+    distanceMoving = false;
+  }
 }
 
 

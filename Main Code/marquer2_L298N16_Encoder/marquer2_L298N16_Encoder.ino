@@ -24,11 +24,18 @@ Todo
 #include "marquerWeb.h"
 #include "mpu9250.h" //By brain taylor 
 
-#define IN1 25
-#define IN2 26
-#define IN3 27
-#define IN4 14
-#define ENA 12 //Right Motor Speed
+// #define IN1 25
+// #define IN2 26
+// #define IN3 27
+// #define IN4 14
+// #define ENA 12 //Right Motor Speed
+// #define ENB 13 //Left Motor Speed
+
+#define ENA 25 //Right Motor Speed
+#define IN1 26
+#define IN2 27
+#define IN3 14
+#define IN4 12
 #define ENB 13 //Left Motor Speed
 
 #define ENCODER1_PIN 34

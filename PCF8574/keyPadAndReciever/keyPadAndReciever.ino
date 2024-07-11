@@ -2,7 +2,7 @@
 #include <PCF8574.h>
 
 // Define I2C addresses for the two PCF8574 expanders
-#define KEYPAD_ADDRESS_1 0x20
+#define KEYPAD_ADDRESS_1 0x20 
 #define RECEIVER_ADDRESS_2 0x21
 
 PCF8574 pcf1(KEYPAD_ADDRESS_1);
@@ -65,11 +65,11 @@ void checkReceiver() {
     if (pcf2.read(receiverPins[i]) == LOW) {
       Serial.print("Receiver channel ");
       Serial.print(i);
-      Serial.println(" is LOW (activated).");
+      Serial.println(" is LOW (not activated).");
     } else {
       Serial.print("Receiver channel ");
       Serial.print(i);
-      Serial.println(" is HIGH (not activated).");
+      Serial.println(" is HIGH (activated).");
     }
   }
 }

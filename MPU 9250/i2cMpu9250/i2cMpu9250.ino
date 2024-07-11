@@ -36,7 +36,7 @@ SDA -> D21
 #include "mpu9250.h"
 
 /* Mpu9250 object */
-bfs::Mpu9250 imu;
+bfs::Mpu9250 imu; 
 
 void setup() {
   /* Serial to display data */
@@ -87,4 +87,5 @@ void loop() {
     Serial.print(imu.die_temp_c());
     Serial.print("\n");
   }
+
 }

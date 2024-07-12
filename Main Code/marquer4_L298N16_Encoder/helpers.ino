@@ -84,7 +84,14 @@ void changeSpeed(String input) {
     targetDistance = input.substring(1).toDouble();
     Serial.print("Turn error Margin Set to: ");
     Serial.println(turnErrorMargin);
+    //Reset stuff
+    encoder1Count = 0;
+    encoder2Count = 0;
+    lastEncoder1Count = 0;
+    lastEncoder2Count = 0;
     yaw = 0;
+    integral = 0;
+    lastError = 0;
     wheelDistance = 0;
     WebPrintln("Start moving a distance of"+String(targetDistance));
     distanceMoving = true;

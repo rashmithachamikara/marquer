@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marquer Creator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* height: 100vh; */
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        label {
+            margin-top: 10px;
+            display: block;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        button#addButton {
+            background-color: #4CAF50;
+            color: white;
+            width: 30%;
+        }
+
+        button#savePresetButton {
+            background-color: #007bff;
+            color: white;
+            width: 30%;
+        }
+
+        button#goToPresetsButton {
+            background-color: #f58220;
+            color: white;
+            width: 30%;
+        }
+
+        button.edit-button {
+            background-color: #eaff07;
+            color: black;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        button.delete-button {
+            background-color: #ea1b1b;
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .instruction-list {
+            list-style-type: none;
+            padding: 0;
+            overflow-y: scroll;
+            max-height: 200px;
+        }
+
+        .instruction-list li {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .edit-form {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+
+        #previewDiv {
+            display: block;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            height: 450px;
+            overflow: auto;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 id="heading">Create new preset</h1>
+        
+        <label for="directionInput">Select Direction:</label>
+        <select id="directionInput">
+            <option value="Forward">Forward</option>
+            <option value="Left">Left</option>
+            <option value="Right">Right</option>
+        </select>
+
+        <label for="distanceInput">Enter Distance (cm):</label>
+        <input type="number" id="distanceInput" placeholder="Enter distance in centimeters">
+        
+        <button id="addButton" onclick="addInstruction()">Add</button>
+
+        <ul id="instructionList" class="instruction-list"></ul>
+        <div id="previewDiv"></div>
+
+        <br>
+        <button id="savePresetButton" onclick="savePreset()">Save</button>
+        <button id="goToPresetsButton" onclick="goToPresets()">Presets</button>
+    </div>
+
+    <script>
+        let instructions = [];
+
+        //Check if in edit mode
+        const urlParams = new URLSearchParams(window.location.search);
+        const editPresetId = urlParams.get('editPresetId');
+
+        console.log(editPresetId);
+
+        if (editPresetId !== null) {
+            const heading = document.getElementById("heading");
+            const saveButton = document.getElementById("savePresetButton");
+
+            saveButton.setAttribute('onclick','overwritePreset()');
+            saveButton.insertAdjacentHTML('afterend', '<button id="savePresetButton" onclick="savePreset()">Save Copy</button>');
+
+            let presets = JSON.parse(localStorage.getItem('presets')) || [];
+            heading.innerHTML = "Editing: " + presets[editPresetId].name;
+            instructions = presets[editPresetId].instructions;
+            updateInstructionList();
+            updatePreview();
+        }
+
+        function addInstruction() {
+            const direction = document.getElementById('directionInput').value;
+            const distance = parseFloat(document.getElementById('distanceInput').value);
+            if (!isNaN(distance)) {
+                instructions.push({ direction, distance });
+                updateInstructionList();
+                updatePreview();
+            }
+        }
+
+        function updateInstructionList() {
+            const list = document.getElementById('instructionList');
+            list.innerHTML = '';
+            instructions.forEach((instruction, index) => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    ${instruction.direction} - ${instruction.distance} cm
+                    <div>
+                        <button class="delete-button" onclick="deleteInstruction(${index})">Delete</button>
+                        <button class="move-up-button" onclick="moveUp(${index})">&#x25B2;</button>
+                        <button class="move-down-button" onclick="moveDown(${index})">&#x25BC;</button>
+                    </div>
+                `;
+                list.appendChild(listItem);
+            });
+            list.scrollTop = list.scrollHeight;
+        }
+
+        function deleteInstruction(index) {
+            instructions.splice(index, 1);
+            updateInstructionList();
+            updatePreview();
+        }
+
+        function moveUp(index) {
+            if (index > 0) {
+                [instructions[index - 1], instructions[index]] = [instructions[index], instructions[index - 1]];
+                updateInstructionList();
+                updatePreview();
+            }
+        }
+
+        function moveDown(index) {
+            if (index < instructions.length - 1) {
+                [instructions[index + 1], instructions[index]] = [instructions[index], instructions[index + 1]];
+                updateInstructionList();
+                updatePreview();
+            }
+        }
+
+        function savePreset() {
+            const presetName = prompt('Enter a name for this preset:');
+            if (presetName) {
+                const presets = JSON.parse(localStorage.getItem('presets')) || [];
+                const existingPreset = presets.find(preset => preset.name === presetName);
+
+                if (existingPreset) {
+                    const overwrite = confirm('This preset already exists. Do you want to overwrite it?');
+                    if (!overwrite) return; // Exit if the user does not want to overwrite
+                }
+
+                if (existingPreset) {
+                    // Update existing preset
+                    existingPreset.instructions = instructions;
+                } else {
+                    // Add new preset
+                    presets.push({ name: presetName, instructions });
+                }
+
+                localStorage.setItem('presets', JSON.stringify(presets));
+                alert('Preset saved successfully!');
+                instructions = [];
+
+                window.location.href = 'presets.html';
+                updateInstructionList();
+                updatePreview();
+            }
+        }
+
+        function overwritePreset() {
+            const presets = JSON.parse(localStorage.getItem('presets')) || [];
+            const presetName = presets[editPresetId].name;
+            const overwrite = confirm('Do you want to save your changes? This will overwrite your current preset.');
+
+            if (!overwrite) return; // Exit if the user does not want to overwrite
+
+            presets[editPresetId].instructions = instructions;
+
+            localStorage.setItem('presets', JSON.stringify(presets));
+            alert('Preset saved successfully!');
+            instructions = [];
+
+            window.location.href = 'presets.html';
+            updateInstructionList();
+            updatePreview();
+        }
+
+
+        function goToPresets() {
+            const noSave = confirm('Do you want to leave without saving your changes?');
+            if (!noSave) return; // Exit if the user does not want to save
+
+            window.location.href = 'presets.html';
+        }
+
+        function updatePreview() {
+            const previewDiv = document.getElementById('previewDiv');
+            previewDiv.innerHTML = '';
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Initial canvas size
+            let canvasWidth = 5000;//previewDiv.clientWidth;
+            let canvasHeight = 5000;//previewDiv.clientHeight;
+
+            // Initial starting position
+            let currentX = canvasWidth / 2;
+            let currentY = canvasHeight / 2;
+            let angle = 0;
+
+            // Determine the bounds to expand the canvas
+            let minX = currentX;
+            let maxX = currentX;
+            let minY = currentY;
+            let maxY = currentY;
+
+            instructions.forEach((instruction) => {
+                if (instruction.direction === 'Left') {
+                    angle -= Math.PI / 2;
+                } else if (instruction.direction === 'Right') {
+                    angle += Math.PI / 2;
+                }
+
+                currentX += instruction.distance * Math.sin(angle);
+                currentY -= instruction.distance * Math.cos(angle);
+
+                minX = Math.min(minX, currentX);
+                maxX = Math.max(maxX, currentX);
+                minY = Math.min(minY, currentY);
+                maxY = Math.max(maxY, currentY);
+            });
+
+            // Expand canvas based on the calculated bounds
+            canvasWidth = Math.max(canvasWidth, maxX - minX + 100);
+            canvasHeight = Math.max(canvasHeight, maxY - minY + 100);
+
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            previewDiv.appendChild(canvas);
+
+            // Reset starting position
+            currentX = (canvasWidth / 2); // - minX + 25;
+            currentY = (canvasHeight / 2); // - minY + 25;
+            angle = 0;
+
+            ctx.beginPath();
+            ctx.moveTo(currentX, currentY);
+
+            instructions.forEach((instruction, index) => {
+                if (instruction.direction === 'Left') {
+                    angle -= Math.PI / 2;
+                } else if (instruction.direction === 'Right') {
+                    angle += Math.PI / 2;
+                }
+
+                const newX = currentX + instruction.distance * Math.sin(angle);
+                const newY = currentY - instruction.distance * Math.cos(angle);
+                ctx.lineTo(newX, newY);
+
+                ctx.font = '12px Arial';
+                ctx.fillStyle = 'black';
+                ctx.fillText(`${instruction.distance} cm`, (currentX + newX) / 2, (currentY + newY) / 2);
+
+                // Draw start point
+                if (index === 0) {
+                    ctx.fillStyle = 'green';
+                    ctx.fillRect(currentX - 3, currentY - 3, 6, 6);
+                }
+
+                currentX = newX;
+                currentY = newY;
+
+                if (index === instructions.length - 1) {
+                    ctx.fillStyle = 'red';
+                } else {
+                    ctx.fillStyle = 'blue';
+                }
+                ctx.fillRect(currentX - 3, currentY - 3, 6, 6);
+            });
+
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Scroll to the end
+            previewDiv.scrollTo(currentX-250, currentY-250);
+        }
+    </script>
+</body>
+</html>

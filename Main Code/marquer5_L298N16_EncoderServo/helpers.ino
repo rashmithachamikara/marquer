@@ -93,6 +93,9 @@ void handleInput(String input) {
     wheelDistance = 0;
     WebPrintln("Start moving a distance of "+String(targetDistance)+"cm");
     distanceMoving = true;
+  } else if (input.startsWith("S")) { // Add this block for servo control
+    int angle = input.substring(1).toInt();
+    moveServoToAngle(angle);
   }
 
   analogWrite(ENA, speedA);

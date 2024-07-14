@@ -19,6 +19,7 @@ void setup() {
 void loop() {
   // Check if data is available on the serial port
   if (Serial.available() > 0) {
+
     // Read the input from the serial port
     String input = Serial.readStringUntil('\n');
 

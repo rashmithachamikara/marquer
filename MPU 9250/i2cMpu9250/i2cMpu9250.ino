@@ -87,5 +87,4 @@ void loop() {
     Serial.print(imu.die_temp_c());
     Serial.print("\n");
   }
-
 }

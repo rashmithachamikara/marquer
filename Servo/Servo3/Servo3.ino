@@ -3,6 +3,9 @@
 // Define the servo pin
 const int servoPin = 32;
 
+const int penLiftedAngle = 0;
+const int penDroppedAngle = 60;
+
 // Create a Servo object
 Servo myServo;
 
@@ -29,11 +32,11 @@ void loop() {
     int servoAngle = input.toInt();
 
     // Check if the input is a valid angle
-    if (angle >= 0 && angle <= 180) {
+    if (servoAngle >= 0 && servoAngle <= 180) {
       // Move the servo to the specified angle
-      myServo.write(angle);
+      myServo.write(servoAngle);
       Serial.print("Moving to ");
-      Serial.print(angle);
+      Serial.print(servoAngle);
       Serial.println(" degrees");
     } else {
       // If the input is not a valid angle, print an error message
@@ -42,6 +45,24 @@ void loop() {
   }
 }
 
-void servoTurn(){
-  
+void penUp(){
+  myServo.write(penDroppedAngle);
+}
+
+void penDown(){
+  myServo.write(penLiftedAngle);
+}
+
+void servoTurnTo(int servoAngle){
+  // Check if the input is a valid angle
+  if (servoAngle >= 0 && servoAngle <= 180) {
+    // Move the servo to the specified angle
+    myServo.write(servoAngle);
+    Serial.print("Moving to ");
+    Serial.print(servoAngle);
+    Serial.println(" degrees");
+  } else {
+    // If the input is not a valid angle, print an error message
+    Serial.println("Invalid input. Please enter a number between 0 and 180.");
+  }
 }

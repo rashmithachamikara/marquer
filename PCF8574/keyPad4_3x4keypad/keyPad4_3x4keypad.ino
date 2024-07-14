@@ -1,4 +1,4 @@
-//Scan keypad Columns and Rows to get any avialble input from keypad
+//Scan keypad Columns and Rows to get any available input from keypad
 //Made for 3x4 plastic matrix keypad
 
 #include <Wire.h>

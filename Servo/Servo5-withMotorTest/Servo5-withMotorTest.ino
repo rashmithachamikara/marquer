@@ -1,5 +1,15 @@
 #include <ESP32Servo.h>
 
+#define IN1 25
+#define IN2 26
+#define IN3 27
+#define IN4 14
+#define ENA 12 //Right Motor Speed
+#define ENB 13 //Left Motor Speed
+
+int speedA = 0;
+int speedB = 0;
+
 Servo myServo;  // Create a servo object
 
 void setup() {
@@ -17,4 +27,8 @@ void loop() {
     myServo.write(pos);              // Tell servo to go to position in variable 'pos'
     delay(15);                       // Wait 15 ms for the servo to reach the position
   }
+
+  analogWrite(ENA, speedA);
+  analogWrite(ENB, speedB);
+  delay(100);
 }

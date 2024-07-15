@@ -1,6 +1,7 @@
 /*
 
 Copied from: L298NserialSpeedAdjust2
+All works as final
 
 */
 
@@ -11,7 +12,7 @@ Copied from: L298NserialSpeedAdjust2
 #define ENA 12
 #define ENB 13
 
-#define ENCODER1_PIN 34
+#define ENCODER1_PIN 34  //Left
 #define ENCODER2_PIN 35
 
 // Constants for encoder resolution

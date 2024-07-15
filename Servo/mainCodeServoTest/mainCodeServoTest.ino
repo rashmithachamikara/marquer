@@ -27,19 +27,8 @@ Todo
 
 */
 
-//#include "marquerWeb.h"
+#include "marquerWeb.h"
 #include "mpu9250.h" //By brain taylor 
-
-#include <ESP32Servo.h>
-
-// Define the servo pin
-const int servoPin = 32;
-
-int penLiftedAngle = 0;
-int penDroppedAngle = 60;
-
-// Create a Servo object
-Servo myServo;
 
 #define IN1 25
 #define IN2 26
@@ -59,6 +48,14 @@ Servo myServo;
 #define ENCODER2_PIN 35
 
 #define LED 2
+
+#include <ESP32Servo.h>
+
+// Define the servo pin
+const int servoPin = 32;
+
+// Create a Servo object
+Servo myServo;
 
 // ======== L298N =========
 int speedA = 0; // Speed for motor A (0 to 255) Right
@@ -152,25 +149,30 @@ void setup() {
   // Wait a moment for serial communication to stabilize
   delay(100);
 
+  analogWrite(ENA, 0);
+  analogWrite(ENB, 0);
+
+  // Attach the servo to the servo pin
+  myServo.attach(servoPin);
+  servoTurnTo(0);
+
   pinMode(LED,OUTPUT);
   delay(500);
   digitalWrite(LED,HIGH);
 
-  servoSetup();
-
   // =============== Marquer WEB ===============
-  //setupMarquerWeb();
+  setupMarquerWeb();
 
   delay(500);
   digitalWrite(LED,LOW);
 
   // Set the callback function to handle POST messages
-  // setWebMessageCallback([](String message) {
-  //   Serial.println("Received message via POST:");
-  //   Serial.println(message);
-  //   // Input Handling
-  //   handleInput(message);
-  // });
+  setWebMessageCallback([](String message) {
+    Serial.println("Received message via POST:");
+    Serial.println(message);
+    // Input Handling
+    handleInput(message);
+  });
 
   // =============== Marquer WEB END ===============
 
@@ -228,13 +230,12 @@ void setup() {
 }
 
 void loop() {
-  
-
   currentTime = millis();
 
   //========= MPU 9250 =========
   calculateYaw();
   //===========================
+
 
   //=========== PID ===========
   //Do PID per 50ms
@@ -242,7 +243,6 @@ void loop() {
     moveStraightPid();
   }
   //===========================
-
 
   //========= Turn =========
   if (turning == 1){
@@ -258,7 +258,14 @@ void loop() {
   }
   //===========================
 
-  //servoUpDown();
+  // for (int pos = 0; pos <= 60; pos++) {  // Move the servo from 0 to 180 degrees
+  //   myServo.write(pos);              // Tell servo to go to position in variable 'pos'
+  //   delay(15);                       // Wait 15 ms for the servo to reach the position
+  // }
+  // for (int pos = 60; pos >= 0; pos--) {  // Move the servo back from 180 to 0 degrees
+  //   myServo.write(pos);              // Tell servo to go to position in variable 'pos'
+  //   delay(15);                       // Wait 15 ms for the servo to reach the position
+  // }
 
   //========= L298N =========
   // Control motor direction and speed
@@ -272,7 +279,7 @@ void loop() {
 
   // Once every 200ms stuff
   if (currentTime - lastSerialUpdateTime >= 500) {
-    //loopMarquerWeb();
+    loopMarquerWeb();
 
     float encoder1Speed = (encoder1Count - lastEncoder1Count) * (1000.0 / ENCODER_RESOLUTION); // Rotations per second
     float encoder2Speed = (encoder2Count - lastEncoder2Count) * (1000.0 / ENCODER_RESOLUTION); // Rotations per second
@@ -348,15 +355,16 @@ void distanceMove(){
   }
 }
 
-//dummy webprint
-// Template function to send messages via WebSocket
-template <typename T>
-void WebPrint(T message) {
-  Serial.print("<W>");
-}
-
-// Template function to send messages with newline via WebSocket
-template <typename T>
-void WebPrintln(T message) {
-  Serial.print("<W>");
+void servoTurnTo(int servoAngle){
+  // Check if the input is a valid angle
+  if (servoAngle >= 0 && servoAngle <= 180) {
+    // Move the servo to the specified angle
+    myServo.write(servoAngle);
+    Serial.print("Moving to ");
+    Serial.print(servoAngle);
+    Serial.println(" degrees");
+  } else {
+    // If the input is not a valid angle, print an error message
+    Serial.println("Invalid input. Please enter a number between 0 and 180.");
+  }
 }

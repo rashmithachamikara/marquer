@@ -30,16 +30,19 @@ void loop() {
   int d1 = pcf8574.read(1);
   int d2 = pcf8574.read(2);
   int d3 = pcf8574.read(3);
+  int ut = pcf8574.read(4);
   
   // Print values to the Serial Monitor
-  Serial.print("D0: ");
+  Serial.print("D0 (B): ");
   Serial.print(d0);
-  Serial.print("  D1: ");
+  Serial.print("  D1 (D): ");
   Serial.print(d1);
-  Serial.print("  D2: ");
+  Serial.print("  D2 (A): ");
   Serial.print(d2);
-  Serial.print("  D3: ");
-  Serial.println(d3);
+  Serial.print("  D3 (C): ");
+  Serial.print(d3);
+  Serial.print("  UT: ");
+  Serial.println(ut);
   
   // Plot values on Serial Plotter (requires Arduino IDE)
   Serial.print(d0);
@@ -48,7 +51,9 @@ void loop() {
   Serial.print(",");
   Serial.print(d2);
   Serial.print(",");
-  Serial.println(d3);
+  Serial.print(d3);
+  Serial.print(",");
+  Serial.println(ut);
   
   delay(100); // Delay for stability
 }

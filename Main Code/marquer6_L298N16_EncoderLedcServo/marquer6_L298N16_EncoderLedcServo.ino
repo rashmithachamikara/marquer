@@ -27,7 +27,7 @@ Todo
 
 */
 
-//#include "marquerWeb.h"
+#include "marquerWeb.h"
 #include "mpu9250.h" //By brain taylor 
 
 #include <ESP32Servo.h>
@@ -159,18 +159,18 @@ void setup() {
   servoSetup();
 
   // =============== Marquer WEB ===============
-  //setupMarquerWeb();
+  setupMarquerWeb();
 
   delay(500);
   digitalWrite(LED,LOW);
 
   // Set the callback function to handle POST messages
-  // setWebMessageCallback([](String message) {
-  //   Serial.println("Received message via POST:");
-  //   Serial.println(message);
-  //   // Input Handling
-  //   handleInput(message);
-  // });
+  setWebMessageCallback([](String message) {
+    Serial.println("Received message via POST:");
+    Serial.println(message);
+    // Input Handling
+    handleInput(message);
+  });
 
   // =============== Marquer WEB END ===============
 
@@ -258,7 +258,7 @@ void loop() {
   }
   //===========================
 
-  //servoUpDown();
+  servoUpDown();
 
   //========= L298N =========
   // Control motor direction and speed
@@ -272,7 +272,7 @@ void loop() {
 
   // Once every 200ms stuff
   if (currentTime - lastSerialUpdateTime >= 500) {
-    //loopMarquerWeb();
+    loopMarquerWeb();
 
     float encoder1Speed = (encoder1Count - lastEncoder1Count) * (1000.0 / ENCODER_RESOLUTION); // Rotations per second
     float encoder2Speed = (encoder2Count - lastEncoder2Count) * (1000.0 / ENCODER_RESOLUTION); // Rotations per second
@@ -350,13 +350,13 @@ void distanceMove(){
 
 //dummy webprint
 // Template function to send messages via WebSocket
-template <typename T>
-void WebPrint(T message) {
-  Serial.print("<W>");
-}
+// template <typename T>
+// void WebPrint(T message) {
+//   Serial.print("<W>");
+// }
 
 // Template function to send messages with newline via WebSocket
-template <typename T>
-void WebPrintln(T message) {
-  Serial.print("<W>");
-}
+// template <typename T>
+// void WebPrintln(T message) {
+//   Serial.print("<W>");
+// }

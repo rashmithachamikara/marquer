@@ -98,9 +98,9 @@ double gyroBiasZ = -0.019000; // Caluclated with repeated data collection averag
 
 // PID constants
 double desiredYaw = 0.0; // Target yaw angle
-double Kp = 2.5;
-double Ki = 0.5;
-double Kd = 1;
+double Kp = 1; //2.5;
+double Ki = 1; //0.5;
+double Kd = 1; //1;
 double integral = 0;
 double lastError = 0;
 double dt = 0.1; // Time interval for PID calculation
@@ -138,7 +138,7 @@ double overshootMargin = 3;
 //Distance Moving Variables
 bool distanceMoving = false; //Context switch. Change to more sophisticated method later
 double targetDistance = 0;
-int movingBaseSpeed = 100;
+int movingBaseSpeed = 120;
 //===========================
 
 // ========= Command List (Context switches etc) =========
@@ -325,7 +325,7 @@ void loop() {
     handleInput(input);  // Pass the input to the handleInput function
   }
 
-  delay(50); // Delays are not used anymore!
+  delay(10); // Delays are not used anymore!
 }
 
 void distanceMove(){

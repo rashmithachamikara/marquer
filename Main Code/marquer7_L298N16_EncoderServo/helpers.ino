@@ -93,7 +93,11 @@ void handleInput(String input) {
     wheelDistance = 0;
     WebPrintln("Start moving a distance of "+String(targetDistance)+"cm");
     distanceMoving = true;
-  } else if (input.startsWith("S")) {
+  } else if (input.startsWith("SU")) {
+    penUp();
+  } else if (input.startsWith("SD")) {
+    penDown();
+  }else if (input.startsWith("S")) {
     int angle = input.substring(1).toInt();
     servoTurnTo(angle);
     Serial.println("servoTurnTo() called with " + String(angle));

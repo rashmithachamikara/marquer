@@ -22,14 +22,16 @@ Todo
 - Calibrate distance moving system. Probably add proportional control
 - Create a context system
 
-
 ===============================================================
 
 */
 
+//Libraries
 #include "marquerWeb.h"
 #include "mpu9250.h" //By brain taylor 
+#include <ESP32Servo.h>
 
+//Pins
 #define IN1 25
 #define IN2 26
 #define IN3 27
@@ -37,6 +39,7 @@ Todo
 #define ENA 12 //Right Motor Speed
 #define ENB 13 //Left Motor Speed
 
+//Alternative pin configuration for motors
 // #define ENA 25 //Right Motor Speed
 // #define IN1 26
 // #define IN2 27
@@ -49,13 +52,7 @@ Todo
 
 #define LED 2
 
-#include <ESP32Servo.h>
-
-// Define the servo pin
-const int servoPin = 32;
-
-// Create a Servo object
-Servo myServo;
+#define SERVO_PIN 32
 
 // ======== L298N =========
 int speedA = 0; // Speed for motor A (0 to 255) Right
@@ -144,17 +141,22 @@ double targetDistance = 0;
 int movingBaseSpeed = 100;
 
 //===========================
+
+
+
 void setup() {
   Serial.begin(115200);
   // Wait a moment for serial communication to stabilize
   delay(100);
 
+  //Assign PWM channel to ENA, ENB by using analogWrite().
+  //Do this before attaching PWM to servo.
+  //Attaching servo a PWM channel before analogWrite() might cause analogWrite() to attach the same PWM channel and clock used by servo to ENA,ENB pins when it is called later in the program.
   analogWrite(ENA, 0);
   analogWrite(ENB, 0);
 
-  // Attach the servo to the servo pin
-  myServo.attach(servoPin);
-  servoTurnTo(0);
+  //Call servoSetup after attaching PWM to ENA, ENB pins
+  servoSetup();
 
   pinMode(LED,OUTPUT);
   delay(500);
@@ -258,15 +260,6 @@ void loop() {
   }
   //===========================
 
-  // for (int pos = 0; pos <= 60; pos++) {  // Move the servo from 0 to 180 degrees
-  //   myServo.write(pos);              // Tell servo to go to position in variable 'pos'
-  //   delay(15);                       // Wait 15 ms for the servo to reach the position
-  // }
-  // for (int pos = 60; pos >= 0; pos--) {  // Move the servo back from 180 to 0 degrees
-  //   myServo.write(pos);              // Tell servo to go to position in variable 'pos'
-  //   delay(15);                       // Wait 15 ms for the servo to reach the position
-  // }
-
   //========= L298N =========
   // Control motor direction and speed
   setSpeedAndDir();
@@ -352,19 +345,5 @@ void distanceMove(){
     //Print debug stuff then set flag
     WebPrint("Moved a distance of "+String(wheelDistance)+"cm.");
     distanceMoving = false;
-  }
-}
-
-void servoTurnTo(int servoAngle){
-  // Check if the input is a valid angle
-  if (servoAngle >= 0 && servoAngle <= 180) {
-    // Move the servo to the specified angle
-    myServo.write(servoAngle);
-    Serial.print("Moving to ");
-    Serial.print(servoAngle);
-    Serial.println(" degrees");
-  } else {
-    // If the input is not a valid angle, print an error message
-    Serial.println("Invalid input. Please enter a number between 0 and 180.");
   }
 }

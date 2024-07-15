@@ -139,17 +139,24 @@ double overshootMargin = 3;
 bool distanceMoving = false; //Context switch. Change to more sophisticated method later
 double targetDistance = 0;
 int movingBaseSpeed = 100;
+//===========================
+
+// ========= Command List (Context switches etc) =========
+bool executingCommandList = false;
+String command = "forward 200 left 100 left 200 left 100";
+
 
 //===========================
 
-
-//Sample command list
-String command = "forward 200 left 100 left 200 left 100";
 
 void setup() {
   Serial.begin(115200);
   // Wait a moment for serial communication to stabilize
   delay(100);
+
+  //Initial commandList
+  String initialCommand = "T90 T-90 G50";
+  setCommandList(initialCommand);
 
   //Assign PWM channel to ENA, ENB by using analogWrite().
   //Do this before attaching PWM to servo.
@@ -347,5 +354,8 @@ void distanceMove(){
     //Print debug stuff then set flag
     WebPrint("Moved a distance of "+String(wheelDistance)+"cm.");
     distanceMoving = false;
+    if (executingCommandList) {
+      nextCommand();
+    }
   }
 }

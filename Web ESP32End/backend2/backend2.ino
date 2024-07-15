@@ -1,10 +1,7 @@
 //#include <vector>
 //#include <string>
 
-//#include <vector>
-//#include <string>
-
-// This will hold the split command words.
+// Vector to hold commandList
 std::vector<String> commandList;
 int currentStep = 0;
 int totalSteps = 0; // Variable to store the total number of steps
@@ -25,8 +22,8 @@ void setCommandList(const String& cmd) {
     Serial.println("New command set");
 }
 
-// Function to execute the next step.
-void nextStep() {
+// Function to execute the next command.
+void nextCommand() {
     if (currentStep < commandList.size()) {
         String word = commandList[currentStep];
         // Process the word
@@ -44,15 +41,15 @@ void setup() {
 }
 
 void loop() {
-  // Call nextStep() as needed, for example, based on a button press or a timer.
-  // if (/* condition to call nextStep */) {
-  //     nextStep();
+  // Call nextCommand() as needed, for example, based on a button press or a timer.
+  // if (/* condition to call nextCommand */) {
+  //     nextCommand();
   // }
 
   if (Serial.available() > 0) {  // Check if there is any serial input available
     String input = Serial.readStringUntil('\n');  // Read the input until newline character
     if (input == "i") {
-      nextStep();
+      nextCommand();
     } else if (input == "a"){
       setCommandList("Little Brown Fox Jump Over Lazy Dog 100 200");
     }

@@ -21,7 +21,21 @@ void handleInput(String input) {
     //turnSpeedB = speedB;
     Serial.print("Speed of Motor B set to: ");
     Serial.println(speedB);
-  } else if (input.startsWith("C")) {
+  } else if (input.startsWith("CMDR")) {
+    Serial.print("CommandList Execution Started!");
+    WebPrintln("CommandList Execution Started!");
+    executingCommandList = true;
+    nextCommand();
+  } else if (input.startsWith("CMDH")) {
+    executingCommandList = false;
+    Serial.print("CommandList Execution Halted!");
+    WebPrintln("CommandList Execution Halted!");
+  } else if (input.startsWith("CMD")) {
+    String newCommand = input.substring(3);
+    Serial.print("New command recieved");
+    WebPrintln("New command recieved");
+    setCommandList(newCommand);
+  }  else if (input.startsWith("C")) {
     int speed = input.substring(1).toInt();
     speed = constrain(speed, 0, 255); // Constrain speed to 0-255
     speedA = speed;
@@ -72,6 +86,7 @@ void handleInput(String input) {
     yaw = 0;
     integral = 0;
     lastError = 0;
+    handleInput("CMDH"); //Stop commandlist
   } else if (input.startsWith("DA")) {
     reverseA = !reverseA; // Toggle direction for Motor A
     Serial.print("Direction of Motor A set to: ");

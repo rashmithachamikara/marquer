@@ -190,7 +190,7 @@ void turn() {
         Serial.println("Overshoot detected!");
         WebPrintln("Lower margin: " + String(turnTargetYaw-overshootMargin));
         WebPrintln("Upper margin: " + String(turnTargetYaw+overshootMargin));
-        WebPrintln("Current YAw: " + String(yaw));
+        WebPrintln("Current yaw: " + String(yaw));
         WebPrintln("Significant Overshoot Detected. Retrying!");
       } else {
         Serial.println("No considerable overshoot.");
@@ -215,6 +215,9 @@ void turn() {
         lastTurnError = 0;
         overshootMode = false;
         turning = 0;
+        if (executingCommandList) {
+          nextCommand();
+        }
       }
       checkingOvershoot = false; // Stop checking after the first check
     }

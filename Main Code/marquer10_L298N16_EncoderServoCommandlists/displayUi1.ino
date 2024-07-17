@@ -68,12 +68,8 @@ unsigned long debounceDelay = 50; // 50 milliseconds debounce delay
 bool previousKeyState[ROWS][COLS] = {false};
 
 
-void setup(void) {
-  // Start serial communication
-  Serial.begin(115200);
-  while (!Serial) {
-    ; // Wait for serial port to connect
-  }
+void displaySetup(void) {
+
   keypadSetup();
   Serial.println("Enter a number (1, 2, or 3) to execute a function:");
 
@@ -85,7 +81,7 @@ void setup(void) {
   
 }
 
-void loop() {
+void displayLoop() {
   uiEngine();
 
   Serial.println("Pass");

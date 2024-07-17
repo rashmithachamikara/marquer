@@ -106,20 +106,22 @@ double lastError = 0;
 double dt = 0.1; // Time interval for PID calculation
 unsigned long lastTime = 0;
 unsigned long lastPidUpdateTime = 0;
-int minPidSpeed = 60;
-int maxPidSpeed = 180;
+int minPidSpeed = 50; //60;
+int maxPidSpeed = 170; //180;
 
 //Turning Variables
 double turnTargetYaw = 0.00;
 int turnDirection;
 //PID constants for turning.
-double turnKp = 0.6;
+double turnKp = 0.4;
 double turnKi = 0.4;
 double turnKd = 1.5;
+int minTurnSpeed = 60;
+int maxTurnSpeed = 150;
 int turning = 0; //Context switch. Change to more sophisticated method later
 //int turnSpeedA = 0; //Caclulation variables. Probably unnecessary
 //int turnSpeedB = 0; //Caclulation variables. Probably unnecessary
-int turnBaseSpeed = 60; //Speed for turning. 100 for 7v+ (2x 3.7v). 60 for 12v+ (3x 3.7v)
+int turnBaseSpeed = 30; //Speed for turning. 100 for 7v+ (2x 3.7v). 60 for 12v+ (3x 3.7v). 30 with PCB as low wire resistance
 double turnError;
 double turnDerivative;
 double turnIntegral = 0;
@@ -138,12 +140,11 @@ double overshootMargin = 3;
 //Distance Moving Variables
 bool distanceMoving = false; //Context switch. Change to more sophisticated method later
 double targetDistance = 0;
-int movingBaseSpeed = 120;
+int movingBaseSpeed = 90;
 //===========================
 
 // ========= Command List (Context switches etc) =========
 bool executingCommandList = false;
-String command = "forward 200 left 100 left 200 left 100";
 
 
 //===========================
@@ -325,7 +326,7 @@ void loop() {
     handleInput(input);  // Pass the input to the handleInput function
   }
 
-  delay(10); // Delays are not used anymore!
+  //delay(1); // Delays are not used anymore!
 }
 
 void distanceMove(){

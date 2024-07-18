@@ -242,7 +242,7 @@
     <div id="presetList" class="preset-container"></div>
     <div class="action-buttons">
         <button id="goToCreatorButton" class="creatorButton" onclick="goToCreator()">Go to Creator Page</button>
-        <button class="sendButton" onclick="sendToESP32()">Send to ESP32</button>
+        <button class="sendButton" onclick="sendToESP32()">Send to Marquer</button>
     </div>
 
     <!-- The edit shape Modal -->
@@ -276,7 +276,7 @@
 
         function updatePresetList() {
             const presetList = document.getElementById('presetList');
-            presetList.innerHTML = ''; // Clear existing list
+            presetList.innerHTML = '';
 
             presets.forEach((preset, index) => {
                 const div = document.createElement('div');
@@ -285,7 +285,7 @@
                     <strong>${preset.name}</strong>
                     <div>
                         <button class="previewButton" onclick="previewPreset(${index})">Preview</button>
-                        <button class="editShapeButton" onclick="editPresetShape(${index})">Edit Shape</button>
+                        <button class="editShapeButton" onclick="toCreatorEdit(${index})">Edit</button>
                         <button class="renameButton" onclick="renamePreset(${index})">Rename</button>
                         <button class="deleteButton" onclick="deletePreset(${index})">Delete</button>
                     </div>
@@ -300,80 +300,127 @@
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const margin = 20;
-            let x = 0, y = 0, angle = 0;
-            let minX = 0, minY = 0, maxX = 0, maxY = 0;
+            // Initial canvas size
+            let canvasWidth = 1000; // Set your desired initial canvas width
+            let canvasHeight = 1000; // Set your desired initial canvas height
 
-            preset.instructions.forEach(instruction => {
-                if (instruction.direction === 'Left') {
-                    angle -= Math.PI / 2;
-                } else if (instruction.direction === 'Right') {
-                    angle += Math.PI / 2;
+            // Initial starting position
+            let currentX = canvasWidth / 2;
+            let currentY = canvasHeight / 2;
+            let angle = 0;
+
+            // Determine the bounds to expand the canvas
+            let minX = currentX;
+            let minY = currentY;
+            let maxX = 0;
+            let maxY = 0;
+
+            preset.instructions.forEach((instruction, index) => {
+                const { instructionText, angle: instructionAngle, distance } = instruction;
+
+                if (instructionText.startsWith('Turn')) {
+                    angle += instructionAngle * Math.PI / 180;
                 }
 
-                const startX = x;
-                const startY = y;
+                if (instructionText.startsWith('Left')) {
+                    angle += -90 * Math.PI / 180;
+                }
 
-                x += Math.cos(angle) * instruction.distance;
-                y += Math.sin(angle) * instruction.distance;
+                if (instructionText.startsWith('Right')) {
+                    angle += 90 * Math.PI / 180;
+                }
 
-                const endX = x;
-                const endY = y;
+                const newX = currentX + distance * Math.sin(angle);
+                const newY = currentY - distance * Math.cos(angle);
 
-                // Calculate bounds
-                minX = Math.min(minX, startX, endX);
-                minY = Math.min(minY, startY, endY);
-                maxX = Math.max(maxX, startX, endX);
-                maxY = Math.max(maxY, startY, endY);
+                // Draw start point
+                if (index === 0) {
+                    ctx.fillStyle = 'green';
+                    ctx.fillRect(currentX - 3, currentY - 3, 6, 6);
+                }
+
+                currentX = newX;
+                currentY = newY;
+
+                if ((Math.abs(currentX - minX)) > maxX) {
+                    maxX = Math.abs(currentX - minX);
+                }
+
+                if ((Math.abs(currentY - minY)) > maxY) {
+                    maxY = Math.abs(currentY - minY);
+                }
             });
 
-            const pathWidth = maxX - minX;
-            const pathHeight = maxY - minY;
-            const scaleX = (canvas.width - 2 * margin) / pathWidth;
-            const scaleY = (canvas.height - 2 * margin) / pathHeight;
-            const scale = Math.min(scaleX, scaleY);
-            const offsetX = (canvas.width - scale * pathWidth) / 2 - minX * scale;
-            const offsetY = (canvas.height - scale * pathHeight) / 2 - minY * scale;
+            canvasWidth = Math.max(canvasWidth, (Math.abs(maxX)) * 2 + 100);
+            canvasHeight = Math.max(canvasHeight, (Math.abs(maxY)) * 2 + 100);
 
-            x = 0;
-            y = 0;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            //previewDiv.appendChild(canvas);
+
+            // Reset starting position
+            currentX = canvasWidth / 2;
+            currentY = canvasHeight / 2;
             angle = 0;
 
             ctx.beginPath();
-            ctx.moveTo(x * scale + offsetX, y * scale + offsetY);
+            ctx.moveTo(currentX, currentY);
 
-            preset.instructions.forEach(instruction => {
-                if (instruction.direction === 'Left') {
-                    angle -= Math.PI / 2;
-                } else if (instruction.direction === 'Right') {
-                    angle += Math.PI / 2;
+            preset.instructions.forEach((instruction, index) => {
+                const { instructionText, angle: instructionAngle, distance } = instruction;
+
+                if (instructionText.startsWith('Turn')) {
+                    angle += instructionAngle * Math.PI / 180;
                 }
 
-                const startX = x;
-                const startY = y;
+                if (instructionText.startsWith('Left')) {
+                    angle += -90 * Math.PI / 180;
+                }
 
-                x += Math.cos(angle) * instruction.distance;
-                y += Math.sin(angle) * instruction.distance;
+                if (instructionText.startsWith('Right')) {
+                    angle += 90 * Math.PI / 180;
+                }
 
-                const endX = x;
-                const endY = y;
+                const newX = currentX + distance * Math.sin(angle);
+                const newY = currentY - distance * Math.cos(angle);
 
-                // Draw line
-                ctx.lineTo(endX * scale + offsetX, endY * scale + offsetY);
-                ctx.stroke();
+                ctx.lineTo(newX, newY);
 
-                // Draw distance label near the line
-                const labelX = (startX + endX) / 2 * scale + offsetX;
-                const labelY = (startY + endY) / 2 * scale + offsetY;
-                ctx.fillStyle = '#333';
                 ctx.font = '12px Arial';
-                ctx.fillText((instruction.distance) + "cm", labelX, labelY);
+                ctx.fillStyle = 'black';
+                ctx.fillText(`${instruction.distance} cm`, (currentX + newX) / 2, (currentY + newY) / 2);
 
-                ctx.moveTo(endX * scale + offsetX, endY * scale + offsetY);
+                // Draw start point
+                if (index === 0) {
+                    ctx.fillStyle = 'green';
+                    ctx.fillRect(currentX - 3, currentY - 3, 6, 6);
+                }
+
+                currentX = newX;
+                currentY = newY;
+
+                if (index === preset.instructions.length - 1) {
+                    ctx.fillStyle = 'red';
+                } else {
+                    ctx.fillStyle = 'blue';
+                }
+                ctx.fillRect(currentX - 3, currentY - 3, 6, 6);
             });
+
+
+            // ctx.fillStyle = 'red';
+            // ctx.fillRect(currentX - 3, currentY - 3, 6, 6);
+
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Scroll to the end
+            //previewDiv.scrollTo(currentX - 250, currentY - 250);
 
             document.getElementById('previewModal').style.display = 'flex';
         }
+
 
 
         function closePreviewModal() {
@@ -495,7 +542,7 @@
         }
 
         function toCreatorEdit(editPresetId) {
-            const baseUrl = "creator.html"; // Get the current origin
+            const baseUrl = "creator"; // Get the current origin
             const newUrl = `${baseUrl}?editPresetId=${editPresetId}`;
             window.location.href = newUrl; // Redirect to the new URL
         }
@@ -579,24 +626,24 @@
 
         // Function to send commands to ESP32
         function sendToESP32(command) {
+            const overwrite = confirm('Do you want to send your presets to Marquer? This will overwrite your current Marquer presets');
+            if (!overwrite) return; // Exit if the user does not want to overwrite
+
             console.log('Object for sending to Marquer:', presets);
 
             const filter_pass1 = presets.map(preset => ({
                 name: preset.name,
-                instructions: preset.instructions.map(instr => instr.direction + instr.distance).join(' ')
+                instructions: preset.instructions
+                    .filter(inst => inst.angle !== 0 || inst.distance !== 0) // Remove instructions with both angle and distance as 0
+                    .map(inst => {
+                        const anglePart = inst.angle !== 0 ? `T${inst.angle}` : '';
+                        const distancePart = inst.distance !== 0 ? `G${inst.distance}` : '';
+                        return `${anglePart} ${distancePart}`.trim(); // Combine and trim to remove any leading/trailing spaces
+                    })
+                    .join(' ') // Join all instructions with a space
             }));
 
             console.log(filter_pass1);
-
-            const filter_pass2 = filter_pass1.map(item => ({
-                ...item,
-                instructions: item.instructions
-                    .replace(/Forward(\d+)/g, "G$1")
-                    .replace(/Left(\d+)/g, "T-90 G$1")
-                    .replace(/Right(\d+)/g, "T90 G$1")
-            }));
-
-            console.log(filter_pass2);
 
             function sumNeighboringG(instructions) {
                 const parts = instructions.split(' ');
@@ -618,7 +665,7 @@
                 return result.join(' ');
             }
 
-            const filter_pass3 = filter_pass2.map(item => ({
+            const filter_pass3 = filter_pass1.map(item => ({
                 name: item.name,
                 instructions: sumNeighboringG(item.instructions)
             }));
@@ -635,14 +682,16 @@
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `message=${encodeURIComponent(jsonString)}`
+                body: `message=${encodeURIComponent("PRESETS" + jsonString)}`
             })
                 .then(response => response.text())
                 .then(data => {
                     console.log('Response from ESP32:', data);
+                    alert('Presets sent to Marquer!');
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    alert('Error sending presets. ' + error);
                 });
         }
 

@@ -70,7 +70,6 @@ void ui_drawHomeScreen() {
     // Draw App connection status
     tft.setTextDatum(MC_DATUM);  // Set text datum to middle center
     tft.setFreeFont(&FreeSans9pt7b);  // Set font to a larger font
-    bool connected = false;  // Change this to true if connected
     if (connected) {
       tft.setTextColor(TFT_GREEN, TFT_WHITE);  // Set text color to green with white background
       tft.drawString("App connection: Connected", 160, 200, 2);  // Draw string
@@ -80,8 +79,9 @@ void ui_drawHomeScreen() {
     }
 
     // Draw IP Address
+    IPAddress IP = WiFi.softAPIP();
     tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
-    tft.drawString("IP Address: 192.168.5.5", 160, 220);  // Draw string
+    tft.drawString("IP Address: " + IP.toString(), 160, 220);  // Draw string
 
     // Draw small gray text
     tft.setTextColor(TFT_GREY, TFT_WHITE);  // Set text color to gray with white background
@@ -145,20 +145,23 @@ void ui_drawPresetsPage() {
     tft.drawString("Presets", 160, 20);  // Draw string in the middle of the screen
 
     // Initialize the array of example preset strings for testing
+    Preset* loadedPresets = loadPresets();
     String presets[9];
     for (int i = 0; i < 9; i++) {
-      presets[i] = "Empty";
+      presets[i] = loadedPresets[i].name;
     }
-    presets[0] = "Hello";
-    presets[2] = "My preset";
-    presets[3] = "Preset for floor 2";
+    
+    // presets[0] = "Hello";
+    // presets[2] = "My preset";
+    // presets[3] = "Preset for floor 2";
 
     // Draw the list of presets
     tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
     tft.setTextFont(2);  // Set font to font 2
     tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
     for (int i = 0; i < 9; i++) {
-      tft.drawString(String(i + 1) + " " + presets[i], 15, 50 + i * 20);  // Print each preset with numbering
+      String presetName = presets[i].length() > 18 ? presets[i].substring(0, 15) + "..." : presets[i];
+      tft.drawString(String(i + 1) + " " + presetName, 15, 50 + i * 20);  // Print each preset with numbering
     }
 
     // Draw selected preset
@@ -182,9 +185,9 @@ void ui_drawPresetsPage() {
   tft.setFreeFont(&FreeSansBold24pt7b);
   tft.setTextColor(TFT_RED, TFT_WHITE);
   if (selectedPreset < 1 || selectedPreset > 9){
-    tft.drawString("None", 236, 120);
+    tft.drawString("-", 236, 120);
   } else {
-    tft.drawString("          ", 236, 120); //To reset background to white
+    tft.drawString("    ", 236, 120); //To reset background to white
     tft.drawString(String(selectedPreset), 236, 120);
   }
 }

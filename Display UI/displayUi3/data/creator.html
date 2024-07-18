@@ -1,34 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marquer Creator</title>
     <style>
-         ::-webkit-scrollbar {
-        -webkit-appearance: none;
+        ::-webkit-scrollbar {
+            -webkit-appearance: none;
         }
 
         ::-webkit-scrollbar:vertical {
-        width: 12px;
+            width: 12px;
         }
 
         ::-webkit-scrollbar:horizontal {
-        height: 12px;
+            height: 12px;
         }
 
         ::-webkit-scrollbar-thumb {
-        background-color: rgba(0, 0, 0, .5);
-        border-radius: 10px;
-        border: 2px solid #ffffff;
+            background-color: rgba(0, 0, 0, .5);
+            border-radius: 10px;
+            border: 2px solid #ffffff;
         }
 
         ::-webkit-scrollbar-track {
-        border-radius: 10px; 
-        background-color: #ffffff; 
+            border-radius: 10px;
+            background-color: #ffffff;
         }
-        
-        html{
+
+        html {
             -webkit-overflow-scrolling: auto
         }
 
@@ -63,7 +64,8 @@
             display: block;
         }
 
-        select, input[type="number"] {
+        select,
+        input[type="number"] {
             width: 100%;
             padding: 8px;
             margin-top: 5px;
@@ -156,21 +158,28 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="container">
         <h1 id="heading">Create new preset</h1>
-        
+
         <label for="directionInput">Select Direction:</label>
-        <select id="directionInput">
+        <select id="directionInput" onchange="toggleAngleInput()">
             <option value="Forward">Forward</option>
             <option value="Left">Left</option>
             <option value="Right">Right</option>
+            <option value="CustomAngle">Custom Angle</option>
         </select>
+
+        <div id="angleInputContainer" style="display: none;">
+            <label for="angleInput">Enter Angle (degrees):</label>
+            <input type="number" id="angleInput" placeholder="Enter angle in degrees">
+        </div>
 
         <label for="distanceInput">Enter Distance (cm):</label>
         <input type="number" id="distanceInput" placeholder="Enter distance in centimeters">
-        
+
         <button id="addButton" onclick="addInstruction()">Add</button>
 
         <ul id="instructionList" class="instruction-list"></ul>
@@ -190,11 +199,23 @@
 
         console.log(editPresetId);
 
+        function toggleAngleInput() {
+            const directionInput = document.getElementById('directionInput');
+            const angleInputContainer = document.getElementById('angleInputContainer');
+
+            if (directionInput.value === 'CustomAngle') {
+                angleInputContainer.style.display = 'block';
+            } else {
+                angleInputContainer.style.display = 'none';
+            }
+        }
+
+
         if (editPresetId !== null) {
             const heading = document.getElementById("heading");
             const saveButton = document.getElementById("savePresetButton");
 
-            saveButton.setAttribute('onclick','overwritePreset()');
+            saveButton.setAttribute('onclick', 'overwritePreset()');
             saveButton.insertAdjacentHTML('afterend', '<button id="savePresetButton" onclick="savePreset()">Save Copy</button>');
 
             let presets = JSON.parse(localStorage.getItem('presets')) || [];
@@ -206,9 +227,25 @@
 
         function addInstruction() {
             const direction = document.getElementById('directionInput').value;
+            let angle = 0;
+            let instructionText = direction;
+
+            if (direction === 'CustomAngle') {
+                angle = parseFloat(document.getElementById('angleInput').value);
+                instructionText = `Turn ${angle}`;
+            }
+
+            if (direction === 'Left') {
+                angle = -90;
+            }
+
+            if (direction === 'Right') {
+                angle = 90;
+            }
+
             const distance = parseFloat(document.getElementById('distanceInput').value);
-            if (!isNaN(distance)) {
-                instructions.push({ direction, distance });
+            if (!isNaN(angle) && !isNaN(distance)) {
+                instructions.push({ instructionText, angle, distance });
                 updateInstructionList();
                 updatePreview();
             }
@@ -220,17 +257,18 @@
             instructions.forEach((instruction, index) => {
                 const listItem = document.createElement('li');
                 listItem.innerHTML = `
-                    ${instruction.direction} - ${instruction.distance} cm
-                    <div>
-                        <button class="delete-button" onclick="deleteInstruction(${index})">Delete</button>
-                        <button class="move-up-button" onclick="moveUp(${index})">&#x25B2;</button>
-                        <button class="move-down-button" onclick="moveDown(${index})">&#x25BC;</button>
-                    </div>
-                `;
+            ${instruction.instructionText} - ${instruction.distance} cm
+            <div>
+                <button class="delete-button" onclick="deleteInstruction(${index})">Delete</button>
+                <button class="move-up-button" onclick="moveUp(${index})">&#x25B2;</button>
+                <button class="move-down-button" onclick="moveDown(${index})">&#x25BC;</button>
+            </div>
+        `;
                 list.appendChild(listItem);
             });
             list.scrollTop = list.scrollHeight;
         }
+
 
         function deleteInstruction(index) {
             instructions.splice(index, 1);
@@ -273,6 +311,8 @@
                     presets.push({ name: presetName, instructions });
                 }
 
+                console.log(instructions);
+
                 localStorage.setItem('presets', JSON.stringify(presets));
                 alert('Preset saved successfully!');
                 instructions = [];
@@ -296,7 +336,7 @@
             alert('Preset saved successfully!');
             instructions = [];
 
-            window.location.href = 'presets.html';
+            window.location.href = 'presets';
             updateInstructionList();
             updatePreview();
         }
@@ -316,8 +356,8 @@
             const ctx = canvas.getContext('2d');
 
             // Initial canvas size
-            let canvasWidth = 1000;//previewDiv.clientWidth;
-            let canvasHeight = 1000;//previewDiv.clientHeight;
+            let canvasWidth = 1000; // Set your desired initial canvas width
+            let canvasHeight = 1000; // Set your desired initial canvas height
 
             // Initial starting position
             let currentX = canvasWidth / 2;
@@ -326,51 +366,79 @@
 
             // Determine the bounds to expand the canvas
             let minX = currentX;
-            let maxX = currentX;
             let minY = currentY;
-            let maxY = currentY;
+            let maxX = 0;
+            let maxY = 0;
 
-            instructions.forEach((instruction) => {
-                if (instruction.direction === 'Left') {
-                    angle -= Math.PI / 2;
-                } else if (instruction.direction === 'Right') {
-                    angle += Math.PI / 2;
+            instructions.forEach((instruction, index) => {
+                const { instructionText, angle: instructionAngle, distance } = instruction;
+
+                if (instructionText.startsWith('Turn')) {
+                    angle += instructionAngle * Math.PI / 180;
                 }
 
-                currentX += instruction.distance * Math.sin(angle);
-                currentY -= instruction.distance * Math.cos(angle);
+                if (instructionText.startsWith('Left')) {
+                    angle += -90 * Math.PI / 180;
+                }
 
-                minX = Math.min(minX, currentX);
-                maxX = Math.max(maxX, currentX);
-                minY = Math.min(minY, currentY);
-                maxY = Math.max(maxY, currentY);
+                if (instructionText.startsWith('Right')) {
+                    angle += 90 * Math.PI / 180;
+                }
+
+                const newX = currentX + distance * Math.sin(angle);
+                const newY = currentY - distance * Math.cos(angle);
+
+                // Draw start point
+                if (index === 0) {
+                    ctx.fillStyle = 'green';
+                    ctx.fillRect(currentX - 3, currentY - 3, 6, 6);
+                }
+
+                currentX = newX;
+                currentY = newY;
+
+                if ((Math.abs(currentX-minX))>maxX) {
+                    maxX = Math.abs(currentX-minX);   
+                }
+                
+                if ((Math.abs(currentY-minY))>maxY) {
+                    maxY = Math.abs(currentY-minY);   
+                }   
             });
 
-            // Expand canvas based on the calculated bounds
-            canvasWidth = Math.max(canvasWidth, maxX - minX + 100);
-            canvasHeight = Math.max(canvasHeight, maxY - minY + 100);
+            canvasWidth = Math.max(canvasWidth, (Math.abs(maxX))*2 + 100);
+            canvasHeight = Math.max(canvasHeight,  (Math.abs(maxY))*2 + 100);
 
             canvas.width = canvasWidth;
             canvas.height = canvasHeight;
             previewDiv.appendChild(canvas);
 
             // Reset starting position
-            currentX = (canvasWidth / 2); // - minX + 25;
-            currentY = (canvasHeight / 2); // - minY + 25;
+            currentX = canvasWidth / 2;
+            currentY = canvasHeight / 2;
             angle = 0;
 
             ctx.beginPath();
             ctx.moveTo(currentX, currentY);
 
             instructions.forEach((instruction, index) => {
-                if (instruction.direction === 'Left') {
-                    angle -= Math.PI / 2;
-                } else if (instruction.direction === 'Right') {
-                    angle += Math.PI / 2;
+                const { instructionText, angle: instructionAngle, distance } = instruction;
+
+                if (instructionText.startsWith('Turn')) {
+                    angle += instructionAngle * Math.PI / 180;
                 }
 
-                const newX = currentX + instruction.distance * Math.sin(angle);
-                const newY = currentY - instruction.distance * Math.cos(angle);
+                if (instructionText.startsWith('Left')) {
+                    angle += -90 * Math.PI / 180;
+                }
+
+                if (instructionText.startsWith('Right')) {
+                    angle += 90 * Math.PI / 180;
+                }
+
+                const newX = currentX + distance * Math.sin(angle);
+                const newY = currentY - distance * Math.cos(angle);
+
                 ctx.lineTo(newX, newY);
 
                 ctx.font = '12px Arial';
@@ -394,13 +462,19 @@
                 ctx.fillRect(currentX - 3, currentY - 3, 6, 6);
             });
 
+
+            // ctx.fillStyle = 'red';
+            // ctx.fillRect(currentX - 3, currentY - 3, 6, 6);
+
             ctx.strokeStyle = 'black';
             ctx.lineWidth = 2;
             ctx.stroke();
 
             // Scroll to the end
-            previewDiv.scrollTo(currentX-250, currentY-250);
+            previewDiv.scrollTo(currentX - 250, currentY - 250);
         }
+
     </script>
 </body>
+
 </html>

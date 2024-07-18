@@ -19,7 +19,8 @@
 #include <TFT_eSPI.h> // Graphics and font library for ILI9341 driver chip
 #include <SPI.h>
 #include "marquerWeb.h"
-//#include <Arduino_JSON.h>
+#include <Arduino_JSON.h>
+#include <Preferences.h>
 //#include <Arduino.h> 
 
 //Define custom colors
@@ -39,9 +40,9 @@ bool uiDebug = false;
 //UIPages variables
 double wheelDistance = 120; //Comment when merge As in main code
 int selectedPreset = 1;  // Current preset
+bool connected = false;  // Change this to true if app is connected
 
-
-//====== Keypad ======
+//============ Keypad ============
 #include <Wire.h>
 #include <PCF8574.h>
 
@@ -69,7 +70,17 @@ unsigned long debounceDelay = 50; // 50 milliseconds debounce delay
 
 // Store the previous state of each key
 bool previousKeyState[ROWS][COLS] = {false};
+//================================================
 
+//Presets
+
+struct Preset {
+  String name;
+  String instructions;
+};
+
+Preset presets[9]; // Maximum 9 presets
+//=================================
 
 void setup(void) {
   // Start serial communication
@@ -78,13 +89,19 @@ void setup(void) {
     ; // Wait for serial port to connect
   }
   setupMarquerWeb();
+  loadPresets();
 
   // Set the callback function to handle POST messages
   setWebMessageCallback([](String message) {
     Serial.print("Received message via POST:");
     Serial.println(message);
     // Input Handling
-    //webInput(message);
+    if (message.startsWith("PRESETS")) {
+      savePresets(message);
+    } else {
+      webInput(message);
+    }
+    
   });
 
   keypadSetup();
@@ -341,4 +358,9 @@ void handleUiInputs(char input){
       }
     break;
   }    
+}
+
+void webInput(String input){
+  input.trim(); // Remove any extra whitespace
+  input.toUpperCase();
 }

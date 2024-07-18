@@ -109,6 +109,7 @@ void handleInput(String input) {
     WebPrintln("Start moving a distance of "+String(targetDistance)+"cm");
     distanceMoving = true;
   } else if (input.startsWith("SU")) {
+    WebPrintln("SU Hit");
     penUp();
   } else if (input.startsWith("SD")) {
     penDown();

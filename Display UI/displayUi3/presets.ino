@@ -77,5 +77,5 @@ void setCommandListFromPreset(int presetNo){
   Preset* loadedPresets = loadPresets();
   String instructions = loadedPresets[presetNo-1].instructions;
   String("Setting commandlist with these instructions: " + instructions)
-  
+  setCommandList(instructions);
 }

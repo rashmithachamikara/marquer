@@ -37,10 +37,6 @@ void penUp() {
   Serial.println("Pen up!");
   WebPrintln("Pen up!");
   servoTurnTo(penLiftedAngle);
-  if (executingCommandList) {
-    //delay(1000);
-    nextCommand();
-  }
 }
 
 //Move pen holder down
@@ -48,8 +44,4 @@ void penDown() {
   Serial.println("Pen down!");
   WebPrintln("Pen down!");
   servoTurnTo(penDroppedAngle);
-  if (executingCommandList) {
-    //delay(1000);
-    nextCommand();
-  }
 }

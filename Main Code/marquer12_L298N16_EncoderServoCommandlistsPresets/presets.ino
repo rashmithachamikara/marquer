@@ -40,9 +40,8 @@ void savePresets(String input){
 
   preferences.end();
   Serial.println("Data stored in preferences.");
-  staticContentDrawn = false;
-
-  delay(100);
+  WebPrintln("Data stored in preferences.");
+  //staticContentDrawn = false;
   //loadPresets();
 }
 
@@ -77,5 +76,5 @@ void setCommandListFromPreset(int presetNo){
   Preset* loadedPresets = loadPresets();
   String instructions = loadedPresets[presetNo-1].instructions;
   Serial.println("Setting commandlist with these instructions: " + instructions);
-  //setCommandList(instructions);
+  setCommandList(instructions);
 }

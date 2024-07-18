@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*"/>
+    <title>Marquer Control</title>
+    <style>
+        * {
+            touch-action: manipulation;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            margin: 10px;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .slider-container {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+        }
+        .slider-container label {
+            flex: 1;
+        }
+        .slider-container input[type="range"] {
+            flex: 2;
+        }
+        .slider-container .adjust-buttons {
+            display: flex;
+            flex-direction: column;
+        }
+        .slider-container .adjust-buttons button {
+            margin: 2px 0;
+            width: 30px;
+        }
+        .direction-buttons, .control-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        .direction-buttons button, .control-buttons button {
+            width: 48%;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        #console {
+            height: 150px;
+            background: #333;
+            color: #fff;
+            padding: 10px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .apply-button, .brake-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        .auto-scroll-toggle {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .auto-scroll-toggle label {
+            margin-left: 10px;
+        }
+        .input-container {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .input-container input[type="text"] {
+            flex: 2;
+            padding: 5px;
+            font-size: 16px;
+        }
+        .input-container input[type="checkbox"] {
+            flex: 0 0 auto;
+            margin-left: 10px;
+        }
+        .input-container button {
+            flex: 0 0 auto;
+            padding: 5px 10px;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Marquer Control Debug</h1>
+    <div class="container">
+        <div class="slider-container">
+            <label for="motorA">Motor A Speed: <span id="motorASpeed">0</span></label>
+            <input type="range" id="motorA" name="motorA" min="0" max="250" value="0" oninput="updateSpeed('A')">
+            <div class="adjust-buttons">
+                <button onclick="adjustSpeed('A', 1)">+</button>
+                <button onclick="adjustSpeed('A', -1)">-</button>
+            </div>
+        </div>
+        <div class="slider-container">
+            <label for="motorB">Motor B Speed: <span id="motorBSpeed">0</span></label>
+            <input type="range" id="motorB" name="motorB" min="0" max="250" value="0" oninput="updateSpeed('B')">
+            <div class="adjust-buttons">
+                <button onclick="adjustSpeed('B', 1)">+</button>
+                <button onclick="adjustSpeed('B', -1)">-</button>
+            </div>
+        </div>
+        <button class="apply-button" onclick="applySpeed()">Apply Speed</button>
+        <div class="slider-container">
+            <label for="bothMotors">Both Motors Speed: <span id="bothMotorsSpeed">0</span></label>
+            <input type="range" id="bothMotors" name="bothMotors" min="0" max="250" value="0" oninput="updateSpeed('Both')">
+            <div class="adjust-buttons">
+                <button onclick="adjustSpeed('Both', 1)">+</button>
+                <button onclick="adjustSpeed('Both', -1)">-</button>
+            </div>
+        </div>
+        <button class="apply-button" onclick="applyBothSpeed()">Apply Both Motors Speed</button>
+        <div class="control-buttons">
+            <button class="brake-button" onclick="brake()">Brake</button>
+            <button class="brake-button" onclick="resetStat()">Reset Stat</button>
+        </div>
+        <div class="direction-buttons">
+            <button onclick="changeDirection('A')">Change Motor A Direction</button>
+            <button onclick="changeDirection('B')">Change Motor B Direction</button>
+        </div>
+        <div class="auto-scroll-toggle">
+            <input type="checkbox" id="autoScrollToggle" checked>
+            <label for="autoScrollToggle">Auto-scroll</label>
+        </div>
+        <pre id="console"></pre>
+        <div class="input-container">
+            <input type="text" id="commandInput" placeholder="Enter command">
+            <input type="checkbox" id="newlineCheckbox">
+            <label for="newlineCheckbox">/n</label>
+            <button onclick="sendCommand()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const motorSpeeds = { A: 0, B: 0, C: 0 };
+
+        function updateSpeed(motor) {
+            let speed;
+            if (motor === 'Both') {
+                speed = document.getElementById('bothMotors').value;
+                document.getElementById('bothMotorsSpeed').innerText = speed;
+                motorSpeeds.C = speed;
+            } else {
+                speed = document.getElementById(`motor${motor}`).value;
+                document.getElementById(`motor${motor}Speed`).innerText = speed;
+                motorSpeeds[motor] = speed;
+            }
+        }
+
+        function adjustSpeed(motor, increment) {
+            let slider, speed;
+            if (motor === 'Both') {
+                slider = document.getElementById('bothMotors');
+                speed = parseInt(slider.value) + increment;
+                if (speed < 0) speed = 0;
+                if (speed > 250) speed = 250;
+                slider.value = speed;
+                document.getElementById('bothMotorsSpeed').innerText = speed;
+                motorSpeeds.C = speed;
+            } else {
+                slider = document.getElementById(`motor${motor}`);
+                speed = parseInt(slider.value) + increment;
+                if (speed < 0) speed = 0;
+                if (speed > 250) speed = 250;
+                slider.value = speed;
+                document.getElementById(`motor${motor}Speed`).innerText = speed;
+                motorSpeeds[motor] = speed;
+            }
+        }
+
+        function applySpeed() {
+            const log = `Applying speeds - Motor A: ${motorSpeeds.A}, Motor B: ${motorSpeeds.B}\n`;
+            addLog(log);
+            sendToESP32(`A${motorSpeeds.A}`);
+            sendToESP32(`B${motorSpeeds.B}`);
+        }
+
+        function applyBothSpeed() {
+            const log = `Applying both motors speed: ${motorSpeeds.C}\n`;
+            addLog(log);
+            sendToESP32(`C${motorSpeeds.C}`);
+        }
+
+        function changeDirection(motor) {
+            const log = `Changing direction of Motor ${motor}\n`;
+            addLog(log);
+            sendToESP32(`D${motor}`);
+        }
+
+        function brake() {
+            const log = `Applying brake - Stopping both motors\n`;
+            addLog(log);
+            sendToESP32(`A0`);
+            sendToESP32(`B0`);
+        }
+
+        function resetStat() {
+            const log = `Resetting Stats\n`;
+            addLog(log);
+            sendToESP32(`R`);
+        }
+
+        function addLog(message) {
+            const consoleElement = document.getElementById('console');
+            const logEntry = document.createElement('span');
+            logEntry.textContent = message;
+            consoleElement.appendChild(logEntry);
+            if (document.getElementById('autoScrollToggle').checked) {
+                consoleElement.scrollTop = consoleElement.scrollHeight;
+            }
+        }
+
+        // Function to send commands to ESP32
+        function sendToESP32(command) {
+            const esp32IP = window.location.hostname;
+            fetch(`http://${esp32IP}/post_command`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `message=${encodeURIComponent(command)}`
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log('Response from ESP32:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Function to send input command to ESP32
+        function sendCommand() {
+            let command = document.getElementById('commandInput').value;
+            addLog(`Sent command: ${command}\n`);
+            if (document.getElementById('newlineCheckbox').checked) {
+                command += '\n';
+            }
+            sendToESP32(command);
+        }
+
+        // WebSocket to receive messages from ESP32
+        let socket;
+        const reconnectInterval = 1000; // Time in milliseconds to wait before reconnecting
+
+        function connectWebSocket() {
+            socket = new WebSocket(`ws://${window.location.hostname}/ws`);
+
+            socket.onmessage = function(event) {
+                const message = event.data;
+                addLog(`${message}`);
+            };
+
+            socket.onopen = function(event) {
+                addLog('WebSocket connection established.\n');
+            };
+
+            socket.onclose = function(event) {
+                addLog('WebSocket connection closed. Attempting to reconnect...\n');
+                setTimeout(connectWebSocket, reconnectInterval);
+            };
+
+            socket.onerror = function(error) {
+                addLog(`WebSocket error: ${error.message}\n`);
+            };
+        }
+
+        // Initial connection
+        connectWebSocket();
+
+    </script>
+
+</body>
+</html>

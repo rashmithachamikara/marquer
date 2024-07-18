@@ -72,7 +72,7 @@ unsigned long debounceDelay = 50; // 50 milliseconds debounce delay
 bool previousKeyState[ROWS][COLS] = {false};
 //================================================
 
-//Presets
+//============ Presets ============
 
 struct Preset {
   String name;

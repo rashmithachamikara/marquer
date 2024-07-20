@@ -5,6 +5,10 @@ void handleWifiRemoteInput(String input){
     //Set direction
     reverseA = false;
     reverseB = false;
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+    digitalWrite(IN3, LOW);
+    digitalWrite(IN4, HIGH);
     //Reset PID
     yaw = 0;
     integral = 0;
@@ -15,6 +19,10 @@ void handleWifiRemoteInput(String input){
     //Set direction
     reverseA = true;
     reverseB = true;
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, HIGH);
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, LOW);
     //Reset PID
     yaw = 0;
     integral = 0;

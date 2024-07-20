@@ -31,6 +31,7 @@ Todo
 #include "mpu9250.h" //By brain taylor 
 #include <ESP32Servo.h>
 #include "Ticker.h"
+#include <PCF8574.h>
 
 //Pins
 #define IN1 25
@@ -86,6 +87,28 @@ double wheelDistance = 0;
 //Hoisted for callbacks
 void handleEncoder1Interrupt();
 void handleEncoder2Interrupt();
+
+//===========================
+
+// ========= Reciever =========
+// Define I2C address for the PCF8574
+#define PCF8574_ADDRESS 0x21
+
+// Create a PCF8574 instance
+PCF8574 pcf8574_reciever(PCF8574_ADDRESS);
+
+// Define pin numbers for the PCF8574 (receiver)
+byte receiverPins[4] = {0, 1, 2, 3}; // P0 to P3 of PCF8574
+
+// Variables to store inputs
+char recieverKeys[4] = {'B', 'D', 'A', 'C'}; // Reciever Keypad
+
+// Variables to store previous states
+int prevStates[4] = {LOW, LOW, LOW, LOW}; // Assuming LOW is the default state when nothing is pressed
+
+// Debounce time
+const unsigned long recieverDebounceDelay = 50;
+unsigned long lastRecieverDebounceTime = 0;
 
 //===========================
 
@@ -147,8 +170,6 @@ double targetDistance = 0;
 double distanceMoveOvershoot = 3; //Found thorugh repeated experiment
 double remaigningDistance = 0;
 int movingBaseSpeed = 90;
-
-
 //===========================
 
 // ========= Command List (Context switches etc) =========
@@ -158,6 +179,13 @@ bool executingCommandList = false;
 //Hosited for callbacks
 void runCurrentCommand(String command);
 void handleInput(String input);
+//===========================
+
+// ========= Wifi remote control =========
+int wifiMoveSpeed = 100;
+bool manualTurning = false;
+int manualTurnDirection = 0; //0 right. 1 left
+int manualTurnSpeed = 100;
 //===========================
 
 
@@ -194,9 +222,14 @@ void setup() {
     Serial.println("Received message via POST:");
     Serial.println(message);
     // Input Handling
-    handleInput(message);
+    if(message.startsWith("Remote")){
+      handleWifiRemoteInput(message.substring(7));
+      
+    } else {
+      handleInput(message);
+    }
+    
   });
-
   // =============== Marquer WEB END ===============
 
   //========= L298N =========
@@ -248,6 +281,8 @@ void setup() {
   // Initialize time
   lastTimeMpu = millis();
   //===========================
+  //Reciever
+  recieverSetup();
 
   ledBlink(5);
 }
@@ -259,6 +294,9 @@ void loop() {
   calculateYaw();
   //===========================
 
+  //========= Reciever =========
+  recieverLoop();
+  //===========================
 
   //=========== PID ===========
   //Do PID per 50ms
@@ -268,19 +306,19 @@ void loop() {
   //===========================
 
   //========= Turn =========
-  if (turning == 1){
-    //Serial.println("Hit MainLoop");
+  if (turning){
     turn();
+  }
+  if (manualTurning){
+    manualTurn();
   }
   //===========================
 
   //========= Distance moving =========
   if (distanceMoving){
-    //Serial.println("Hit MainLoop");
     distanceMove();
   }
   if (correctingTurnGap && !turning){
-    //Serial.println("Hit MainLoop");
     correctTurnGap();
   }
   //===========================

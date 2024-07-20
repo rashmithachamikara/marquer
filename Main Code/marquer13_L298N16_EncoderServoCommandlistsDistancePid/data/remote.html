@@ -1,0 +1,250 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Marquer Remote</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            margin: 0;
+            height: 10vh;
+            background-color: #1897b1;
+            color: white;
+        }
+
+        .no-margin{
+            margin: 0;
+        }
+
+        .footer {
+            margin: 0;
+            height: 10vh;
+            background-color: #1897b1;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer button{
+            margin: 0 10px;
+            background-color: azure;
+            color: #0056b3;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-evenly;
+            height: 80vh;
+        }
+
+        h1 {
+            margin: 0;
+            padding: 20px;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 300px;
+            width: 100%;
+        }
+
+        button {
+            -ms-user-select: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .button {
+            padding: 15px;
+            font-size: 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            user-select: none
+        }
+
+        .controls .button:hover {
+            background-color: #0056b3;
+        }
+
+        .pen-controls button {
+            display: inline-block;
+            background-color: #ff5e00;
+        }
+
+        .distance {
+            font-size: 20px;
+            margin: 5px;
+            /* display: inline-block; */
+
+        }
+
+        .distance-div button {
+            /* display: inline-block; */
+            padding: 2px 10px;
+
+
+        }
+
+        @media (max-width: 600px) {
+            .button {
+                font-size: 18px;
+                padding: 12px;
+            }
+        }
+
+        .empty {
+            visibility: hidden;
+        }
+
+        .connected {
+            color: rgb(53, 237, 71);
+        }
+
+        .disconnected {
+            color: rgb(229, 49, 49);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Marquer Remote</h1>
+    </div>
+    <div class="controls">
+        <div>
+            <h2 class="no-margin">Connection</h2>
+            <div class="connected" style="display: none;">Connected to Marquer</div>
+            <div class="disconnected">Not connected to Marquer</div>
+        </div>
+        <div>
+            <h2>Movements</h2>
+            <div class="control-panel">
+                <div class="empty"></div>
+                <button class="button" onmousedown="sendToESP32('Remote_forward_start')"
+                    onmouseup="sendToESP32('Remote_stop')" ontouchstart="sendToESP32('Remote_forward_start')"
+                    ontouchend="sendToESP32('Remote_stop')">Forward</button>
+                <div class="empty"></div>
+                <button class="button" onmousedown="sendToESP32('Remote_left_start')"
+                    onmouseup="sendToESP32('Remote_stop')" ontouchstart="sendToESP32('Remote_left_start')"
+                    ontouchend="sendToESP32('Remote_stop')">Left</button>
+                <div class="empty"></div>
+                <button class="button" onmousedown="sendToESP32('Remote_right_start')"
+                    onmouseup="sendToESP32('Remote_stop')" ontouchstart="sendToESP32('Remote_right_start')"
+                    ontouchend="sendToESP32('Remote_stop')">Right</button>
+                <div class="empty"></div>
+                <button class="button" onmousedown="sendToESP32('Remote_backward_start')"
+                    onmouseup="sendToESP32('Remote_stop')" ontouchstart="sendToESP32('Remote_backward_start')"
+                    ontouchend="sendToESP32('Remote_stop')">Backward</button>
+                <div class="empty"></div>
+            </div>
+        </div>
+        <div>
+            <h2>Pen control</h2>
+            <div class="pen-controls">
+                <button class="button" onclick="sendToESP32('SU')">Pen Up</button>
+                <button class="button" onclick="sendToESP32('SD')">Pen Down</button>
+            </div>
+        </div>
+        <div class="distance-div">
+            <h2 class="no-margin">Distance</h2>
+            <P class="distance"><span id="distanceSpan">0</span>cm</P>
+            <button class="button" onclick="sendToESP32('R')">Reset</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <button class="button" onclick="window.location.href = './'">Home</button>
+        <button class="button" onclick="window.location.href = 'creator'">Creator</button>
+        <button class="button" onclick="window.location.href = 'presets'">Presets</button>
+    </div>
+
+    <script>
+        function sendToESP32(command) {
+            const esp32IP = window.location.hostname;
+            fetch(`http://${esp32IP}/post_command`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `message=${encodeURIComponent(command)}`
+            })
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Response from ESP32:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function handleInput(input) {
+            const regex = /DT:([\d.]+)/;
+            const match = input.match(regex);
+
+            if (match) {
+                const distanceSpan = document.getElementById("distanceSpan");
+                distanceSpan.innerText = match[1];
+            } else {
+                console.log("No match found");
+            }
+        }
+
+        // WebSocket to receive messages from ESP32
+        let socket;
+        const reconnectInterval = 1000; // Time in milliseconds to wait before reconnecting
+
+        function connectWebSocket() {
+            socket = new WebSocket(`ws://${window.location.hostname}/ws`);
+
+            socket.onmessage = function (event) {
+                const message = event.data;
+                handleInput(`${message}`);
+            };
+
+            socket.onopen = function (event) {
+                const connectedDiv = document.querySelector(".connected");
+                const disConnectedDiv = document.querySelector(".disconnected");
+                connectedDiv.style.display = 'block';
+                disConnectedDiv.style.display = 'none';
+            };
+
+            socket.onclose = function (event) {
+                const connectedDiv = document.querySelector(".connected");
+                const disConnectedDiv = document.querySelector(".disconnected");
+                connectedDiv.style.display = 'none';
+                disConnectedDiv.style.display = 'block';
+
+                setTimeout(connectWebSocket, reconnectInterval);
+            };
+
+            socket.onerror = function (error) {
+                const connectedDiv = document.querySelector(".connected");
+                const disConnectedDiv = document.querySelector(".disconnected");
+                connectedDiv.style.display = 'none';
+                disConnectedDiv.style.display = 'block';
+            };
+        }
+
+        // Initial connection
+        connectWebSocket();
+    </script>
+</body>
+
+</html>

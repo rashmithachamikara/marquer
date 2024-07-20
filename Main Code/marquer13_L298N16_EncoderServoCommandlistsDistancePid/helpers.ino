@@ -9,7 +9,29 @@ void handleInput(String input) {
   input.trim(); // Remove any extra whitespace
   input.toUpperCase();
 
-  if (input.startsWith("A")) {
+  if (input.startsWith("BREAKALL")) {
+    Serial.println("Breaking All. Aborting All");
+    WebPrintln("Breaking All. Aborting All");
+    //Active break
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, HIGH);
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, HIGH);
+    delay(50);
+    //Halt after turning
+    speedA = 0;
+    speedB = 0;
+    analogWrite(ENA, speedA);
+    analogWrite(ENB, speedB);
+    reverseA = false;
+    reverseB = false;
+    executingCommandList = false;
+    turning = 0;
+    distanceMoving = 0;
+    correctingTurnGap = false; 
+    correctingStopRotation = false; 
+    penUp();
+  } else if (input.startsWith("A")) {
     speedA = input.substring(1).toInt();
     speedA = constrain(speedA, 0, 255); // Constrain speed to 0-255
     //turnSpeedA = speedA;

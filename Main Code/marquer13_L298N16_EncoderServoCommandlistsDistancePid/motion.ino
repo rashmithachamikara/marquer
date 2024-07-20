@@ -234,3 +234,23 @@ void turn() {
     }
   }
 }
+
+void manualTurn() {
+  //Turn Right
+  if (manualTurnDirection == 0) {
+    //Configure right motor to reverse
+    reverseA = true;
+    reverseB = false;
+  }
+  //Turn left
+  else if (manualTurnDirection == 1) {
+    reverseA = false;
+    reverseB = true;
+  }
+
+  //Apply power
+  speedA = manualTurnSpeed;
+  speedB = manualTurnSpeed;
+  analogWrite(ENA, speedA);
+  analogWrite(ENB, speedB);
+}

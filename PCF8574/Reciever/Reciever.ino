@@ -5,7 +5,7 @@
 #define PCF8574_ADDRESS 0x21
 
 // Create a PCF8574 instance
-PCF8574 pcf8574(PCF8574_ADDRESS);
+PCF8574 pcf8574_reciever(PCF8574_ADDRESS);
 
 void setup() {
   // Initialize serial communication
@@ -26,11 +26,10 @@ byte receiverPins[4] = {0, 1, 2, 3}; // P0 to P3 of PCF8574 #2
 
 void loop() {
   // Read values from P0 to P3 (receiver channels)
-  int d0 = pcf8574.read(0);
-  int d1 = pcf8574.read(1);
-  int d2 = pcf8574.read(2);
-  int d3 = pcf8574.read(3);
-  int ut = pcf8574.read(4);
+  int d0 = pcf8574_reciever.read(0);
+  int d1 = pcf8574_reciever.read(1);
+  int d2 = pcf8574_reciever.read(2);
+  int d3 = pcf8574_reciever.read(3);
   
   // Print values to the Serial Monitor
   Serial.print("D0 (B): ");
@@ -40,9 +39,7 @@ void loop() {
   Serial.print("  D2 (A): ");
   Serial.print(d2);
   Serial.print("  D3 (C): ");
-  Serial.print(d3);
-  Serial.print("  UT: ");
-  Serial.println(ut);
+  Serial.println(d3);
   
   // Plot values on Serial Plotter (requires Arduino IDE)
   Serial.print(d0);
@@ -51,9 +48,7 @@ void loop() {
   Serial.print(",");
   Serial.print(d2);
   Serial.print(",");
-  Serial.print(d3);
-  Serial.print(",");
-  Serial.println(ut);
+  Serial.println(d3);
   
   delay(100); // Delay for stability
 }

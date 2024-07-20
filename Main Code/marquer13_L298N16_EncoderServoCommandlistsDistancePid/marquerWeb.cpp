@@ -50,6 +50,18 @@ void setupMarquerWeb() {
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
 
+  // Route to serve the index.html file when /marquer is accessed
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    Serial.println("Serving /index");
+    if (LittleFS.exists("/index.html")) {
+      request->send(LittleFS, "/index.html", "text/html");
+      Serial.println("File served successfully");
+    } else {
+      request->send(404, "text/plain", "File not found");
+      Serial.println("File not found");
+    }
+  });
+
   // Route to serve the controlApp.html file when /marquer is accessed
   server.on("/marquer", HTTP_GET, [](AsyncWebServerRequest *request){
     Serial.println("Serving /marquer");
@@ -86,12 +98,6 @@ void setupMarquerWeb() {
     }
   });
 
-  // Route to handle incoming GET requests
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    String message = "Hello from ESP32 AP!";
-    request->send(200, "text/plain", message);
-    Serial.println("Received GET request");
-  });
 
   // Route to handle incoming POST requests
   server.on("/post_command", HTTP_POST, [](AsyncWebServerRequest *request){
@@ -106,6 +112,19 @@ void setupMarquerWeb() {
     } else {
       Serial.println("Received POST request with no message");
       request->send(400, "text/plain", "No message parameter");
+    }
+  });
+
+  // ================ Remote Control Routes ===================
+  // Route for root / web page
+  server.on("/remote", HTTP_GET, [](AsyncWebServerRequest *request){
+    Serial.println("Serving /remote.html");
+    if (LittleFS.exists("/remote.html")) {
+      request->send(LittleFS, "/remote.html", "text/html");
+      Serial.println("File served successfully");
+    } else {
+      request->send(404, "text/plain", "File not found");
+      Serial.println("File not found");
     }
   });
 

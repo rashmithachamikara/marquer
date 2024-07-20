@@ -18,9 +18,7 @@ Introuced a 50ms delay in main loop to avoid crashes and wifi usage induced powe
 Send data over wifi in a 500ms delta clock interval
 Made the robot move a specified distance then stop
 Created a context system
-
-Todo
-- Calibrate distance moving system. Probably add proportional control
+Calibrated the distance moving system. Added proportional control
 
 ===============================================================
 
@@ -33,7 +31,7 @@ Todo
 #include "Ticker.h"
 #include <PCF8574.h>
 
-//Pins
+//L298N Pins
 #define IN1 25
 #define IN2 26
 #define IN3 27
@@ -52,9 +50,14 @@ Todo
 #define ENCODER1_PIN 34
 #define ENCODER2_PIN 35
 
+//Built-in LED
 #define LED 2
 
 #define SERVO_PIN 32
+
+//Ultrasonic
+#define TRIG_PIN 5
+#define ECHO_PIN 19
 
 // ======== L298N =========
 int speedA = 0; // Speed for motor A (0 to 255) Right
@@ -66,6 +69,18 @@ bool reverseB = false; // Direction flag for motor B
 unsigned long currentTime; //Time since boot
 unsigned long lastSerialUpdateTime = 0;
 //===========================
+
+// ========= Ultrasonic =========
+Ticker ultrasonicTicker;
+volatile double ultrasonicDistance;
+volatile long startTime;
+volatile long echoTime;
+volatile bool measuring = false;
+
+//Hoisted for callbacks
+void IRAM_ATTR echoISR();
+//===========================
+
 
 // ========= Encoders =========
 
@@ -281,8 +296,11 @@ void setup() {
   // Initialize time
   lastTimeMpu = millis();
   //===========================
+
   //Reciever
   recieverSetup();
+  //Ultrasonic
+  ultrasonicSetup();
 
   ledBlink(5);
 }
@@ -296,6 +314,10 @@ void loop() {
 
   //========= Reciever =========
   recieverLoop();
+  //===========================
+
+  //========= Ultrasonic =========
+  ultrasonicLoop();
   //===========================
 
   //=========== PID ===========
@@ -342,7 +364,8 @@ void loop() {
 
     // Send data to Serial Plotter in a single line with comma-separated values
     Serial.print("Encoder1Speed:"); Serial.print(encoder1Speed);Serial.print(", ");
-    Serial.print("Encoder2Speed:"); Serial.print(encoder2Speed);Serial.print("\t");
+    Serial.print("Encoder2Speed:"); Serial.print(encoder2Speed);Serial.print(", ");
+    Serial.print("Ultrasonic:"); Serial.print(ultrasonicDistance);Serial.print("\t");
 
     // Print out the yaw value
     Serial.print("Yaw: "); Serial.print(yaw,6);
@@ -369,6 +392,7 @@ void loop() {
                 "sL:"+String(speedB)+
                 ", sR:"+String(speedA)+
                 ", DT:"+String(wheelDistance)+
+                ", UD:"+String(ultrasonicDistance)+
                 ", yaw:"+String(yaw)
               );
   }

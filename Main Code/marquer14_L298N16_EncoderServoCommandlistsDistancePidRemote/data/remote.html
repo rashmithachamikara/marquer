@@ -10,6 +10,9 @@
             text-align: center;
             margin: 0;
             padding: 0;
+            -ms-user-select: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .header {
@@ -195,7 +198,7 @@
         }
 
         function handleInput(input) {
-            const regex = /DT:([\d.]+)/;
+            const regex = /DT:([-+]?\d*\.?\d+)/;
             const match = input.match(regex);
 
             if (match) {

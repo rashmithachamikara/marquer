@@ -224,16 +224,19 @@ void ui_drawPreparingPage() {
 
   //=== Animations ===
   // Draw progress bar
-  static int progress = 0;  // Example value for progress out of 100
-  if(progress>=100){
-    progress = 0;
+  if(preparingProgress>=100){
+    uiPage = 5;
+    staticContentDrawn = false;
+    ui_drawProcessingPage();
+    //handleInput("CMDR");
+    return;
   } else {
-    progress++;
+    preparingProgress += 2;
   }
 
   tft.fillRect(50, 180, 220, 20, TFT_WHITE);  // Draw rectangle in the bottom 
   tft.drawRect(50, 180, 220, 20, TFT_BLACK);  // Draw rectangle in the bottom 
-  tft.fillRect(50, 180, progress * 2.2, 20, TFT_BLUE);  // Fill screen with yellow
+  tft.fillRect(50, 180, preparingProgress * 2.2, 20, TFT_BLUE);  // Fill screen with yellow
 }
 
 void drawSpeedometer(int x, int y, int radius, int speed) {
@@ -293,17 +296,20 @@ void drawRotatingAnimation(int x, int y, int radius, int angle) {
 
 void ui_drawProcessingPage() {
   // Variables
-  String presetName = "My Preset 1";  // Example preset name
-  int currentStep = 3;  // Example current step
-  int totalSteps = 5;  // Example total steps
-  String currentStepAction = "Moving 100cm";  // Example current step action
-  static int speed = 30;  // Speed in cm/s
-  int distanceCovered = 20;  // Distance covered in cm
-  int distanceTarget = 50;  // Distance target in cm
-  String direction = "left";  // Direction for rotating
-  String penStatus = "drawing";  // Pen status
+  String presetName = presets[selectedPreset-1].name;  // Get from commandList
 
-  static int angle = 0;
+  // int currentStep = 0;  // Now use global in main code
+  // int totalSteps = 0;  // Now use global in main code
+
+  String currentStepAction = "";  // Will set below depend on the context
+
+  static int speed = 30;  // Speed in cm/s
+  int distanceCovered = wheelDistance;  // Distance covered in cm
+  int distanceTarget = 0;  // Distance target in cm
+  String direction = "left";  // Direction for rotating
+  String penStatus = "Drawing";  // Pen status
+
+  //static int angle = 0; //Now replaced with yaw
   static int state = 0;
 
   // === Static Content ===
@@ -333,15 +339,36 @@ void ui_drawProcessingPage() {
   }
   
   //=== Animations ===
+
+
   //Adjust example variables
-  if (state == 0) {
-    speed += random(-6,6);  // Increment angle for rotating animation
-    if (speed < 0) speed = 0;  // Reset angle after a full rotation
-    if (speed > 90) speed = 90;  // Reset angle after a full rotation
+  // if (state == 0) {
+  //   speed += random(-6,6);  // Increment angle for rotating animation
+  //   if (speed < 0) speed = 0;  // Reset angle after a full rotation
+  //   if (speed > 90) speed = 90;  // Reset angle after a full rotation
+  // }
+  // if (state == 1) {
+  //   angle += 2;  // Increment angle for rotating animation
+  //   if (angle > 90) angle = 0;  // Reset angle after a full rotation
+  // }
+
+  String currentStepCommand = commandList[currentStep];
+
+  if (currentStepCommand.startsWith("G")){
+    distanceTarget = currentStepCommand.substring(1).toInt();
+    currentStepAction = "Moving " + String(distanceTarget) + "cm");
+    state = 0;
   }
-  if (state == 1) {
-    angle += 2;  // Increment angle for rotating animation
-    if (angle > 90) angle = 0;  // Reset angle after a full rotation
+  
+  if (currentStepCommand.startsWith("T")){
+    currentStepAction = "Turning " + String(currentStepCommand.substring(1) + "cm");
+    String turnDirection
+    state = 1;
+  }
+
+  if (currentStepCommand.startsWith("S")){
+    currentStepAction = "Changing Pen Position";
+    String turnDirection
   }
 
   // Draw current step information
@@ -354,12 +381,12 @@ void ui_drawProcessingPage() {
     tft.setTextColor(TFT_MAROON, TFT_WHITE);  // Set text color
     tft.drawString("Straight motion", 120, 125);  // Draw Straight motion label
     // Draw Speedometer
-    drawSpeedometer(50, 162, 40, speed);  // drawSpeedometer(x, y, r, z) Draws a speedometer at (x, y) with radius r. needle at z
+    drawSpeedometer(50, 162, 40, wheelSpeed);  // drawSpeedometer(x, y, r, z) Draws a speedometer at (x, y) with radius r. needle at z
 
     tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color
     tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
     tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
-    tft.drawString("Speed: " + String(speed) + "cm/s      ", 120, 145);  // Draw speed in text
+    tft.drawString("Speed: " + String(wheelSpeed) + "m/s      ", 120, 145);  // Draw speed in text
     // Draw Distance
     tft.drawString("Distance: " + String(distanceCovered) + "/" + String(distanceTarget) + " cm      ", 120, 165);  // Draw distance
     tft.drawString("Pen Status: " + penStatus, 120, 185);  // Draw pen status
@@ -368,13 +395,13 @@ void ui_drawProcessingPage() {
     tft.setTextColor(TFT_MAROON, TFT_WHITE);  // Set text color
     tft.drawString("Rotating", 120, 125);  // Draw Rotating label
     //Draw rotation meter
-    drawRotatingAnimation(50, 162, 40, angle);  // Draw rotating animation at (x, y)
+    drawRotatingAnimation(50, 162, 40, yaw);  // Draw rotating animation at (x, y)
 
     tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color
     tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
     tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
-    tft.drawString("Angle: " + String(angle) + " degrees", 120, 145);  // Draw angle
-    tft.drawString("Direction: " + direction, 120, 165);  // Draw direction
+    tft.drawString("Angle: " + String(yaw) + " degrees", 120, 145);  // Draw angle
+    tft.drawString("Target: " + desiredYaw, 120, 165);  // Draw direction
     tft.drawString("Pen Status: " + penStatus, 120, 185);  // Draw pen status
   }
 

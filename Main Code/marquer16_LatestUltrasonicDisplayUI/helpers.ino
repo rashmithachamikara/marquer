@@ -151,10 +151,10 @@ void handleInput(String input) {
 void ledBlink(int times){
   for (int i=0; i<=times; i++){
     delay(100);
-    digitalWrite(LED,LOW);
+    //digitalWrite(LED,LOW);
     delay(100);
-    digitalWrite(LED,HIGH);
+    //digitalWrite(LED,HIGH);
   }
   delay(100);
-  digitalWrite(LED,LOW);
+  //digitalWrite(LED,LOW);
 }

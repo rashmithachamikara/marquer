@@ -10,15 +10,11 @@
  Make sure all the display driver and pin connections are correct by
  editing the User_Setup.h file in the TFT_eSPI library folder.
 
- #########################################################################
- ###### DON'T FORGET TO UPDATE THE User_Setup.h FILE IN THE LIBRARY ######
- #########################################################################
 */
 
 //====== Display ======
 #include <TFT_eSPI.h> // Graphics and font library for ILI9341 driver chip
 #include <SPI.h>
-#include "marquerWeb.h"
 #include <Arduino_JSON.h>
 #include <Preferences.h>
 //#include <Arduino.h> 
@@ -38,9 +34,9 @@ bool staticContentDrawn = false;
 bool uiDebug = false;
 
 //UIPages variables
-double wheelDistance = 120; //Comment when merge As in main code
 int selectedPreset = 1;  // Current preset
 bool connected = false;  // Change this to true if app is connected
+static int preparingProgress = 0;  // Example value for progress out of 100
 
 //============ Keypad ============
 #include <Wire.h>
@@ -66,43 +62,14 @@ byte colPins[COLS] = {2, 0, 4};     //{4, 5, 6};    // P4 to P6
 
 // Variables for debouncing
 unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 50; // 50 milliseconds debounce delay
+unsigned long debounceDelay = 10; // 50 milliseconds debounce delay
 
 // Store the previous state of each key
 bool previousKeyState[ROWS][COLS] = {false};
 //================================================
 
-//============ Presets ============
-
-struct Preset {
-  String name;
-  String instructions;
-};
-
-Preset presets[9]; // Maximum 9 presets
-//=================================
-
-void setup(void) {
-  // Start serial communication
-  Serial.begin(115200);
-  while (!Serial) {
-    ; // Wait for serial port to connect
-  }
-  setupMarquerWeb();
+void displayUiSetup(void) {
   loadPresets();
-
-  // Set the callback function to handle POST messages
-  setWebMessageCallback([](String message) {
-    Serial.print("Received message via POST:");
-    Serial.println(message);
-    // Input Handling
-    if (message.startsWith("PRESETS")) {
-      savePresets(message);
-    } else {
-      webInput(message);
-    }
-    
-  });
 
   keypadSetup();
   Serial.println("Enter a number (1, 2, or 3) to execute a function:");
@@ -115,13 +82,23 @@ void setup(void) {
   
 }
 
-void loop() {
+void displayUiLoop() {
   uiEngine();
 
-  loopMarquerWeb();
-  //Serial.println("Pass");
+  //Check serial inputs
+  if (Serial.available() > 0) {
+    // Read the incoming byte from the Serial Monitor
+    char input = Serial.read();
+    handleUiInputs(input);
+  }
 
-  delay(100);
+  //Check keypad inputs
+  char key = getKey();
+  if (key) {
+    Serial.print("Key pressed: ");
+    Serial.println(key);
+    handleUiInputs(key);
+  }
 }
 
 void uiEngine(){
@@ -199,21 +176,6 @@ void uiEngine(){
     tft.endWrite();  // End the write transaction
   }
   old_uiPage = uiPage;
-
-  //Check serial inputs
-  if (Serial.available() > 0) {
-    // Read the incoming byte from the Serial Monitor
-    char input = Serial.read();
-    handleUiInputs(input);
-  }
-
-  //Check keypad inputs
-  char key = getKey();
-  if (key) {
-    Serial.print("Key pressed: ");
-    Serial.println(key);
-    handleUiInputs(key);
-  }
 }
 
 void handleUiInputs(char input){
@@ -293,6 +255,8 @@ void handleUiInputs(char input){
           break;
         case '#':
           uiPage = 4;
+          preparingProgress = 0;
+          setCommandListFromPreset(selectedPreset);
           staticContentDrawn = false;
           ui_drawPreparingPage();
           break;
@@ -358,9 +322,4 @@ void handleUiInputs(char input){
       }
     break;
   }    
-}
-
-void webInput(String input){
-  input.trim(); // Remove any extra whitespace
-  input.toUpperCase();
 }

@@ -32,20 +32,28 @@ Calibrated the distance moving system. Added proportional control
 #include <PCF8574.h>
 
 //L298N Pins
-#define IN1 25
-#define IN2 26
-#define IN3 27
-#define IN4 14
-#define ENA 12 //Right Motor Speed
-#define ENB 13 //Left Motor Speed
+// #define IN1 25
+// #define IN2 26
+// #define IN3 27
+// #define IN4 14
+// #define ENA 12 //Right Motor Speed
+// #define ENB 13 //Left Motor Speed
 
-//Alternative pin configuration for motors
+//Alternative pin configuration 1 for motors
 // #define ENA 25 //Right Motor Speed
 // #define IN1 26
 // #define IN2 27
 // #define IN3 14
 // #define IN4 12
 // #define ENB 13 //Left Motor Speed
+
+//Alternative pin configuration 2 for motors
+#define ENA 13 //Right Motor Speed
+#define IN1 12
+#define IN2 14
+#define IN3 27
+#define IN4 26
+#define ENB 25 //Left Motor Speed
 
 #define ENCODER1_PIN 34
 #define ENCODER2_PIN 35
@@ -92,17 +100,26 @@ int lastEncoder1Count = 0;
 int lastEncoder2Count = 0;
 unsigned long lastInterruptTime1 = 0;
 unsigned long lastInterruptTime2 = 0;
-double wheelDiameter = 21.25; //Whell diameter is measured to be 21.25cm
+const double wheelDiameter = 21.25; //Whell diameter is measured to be 21.25cm
+const double wheelDiameterInm = 21.25/100; //Whell diameter in meters
+const unsigned long encoderSpeedInterval = 100;
 double wheel1Rotations = 0;
 double wheel2Rotations = 0;
 double wheel1Distance = 0; //Distance in cm
 double wheel2Distance = 0; //Distance in cm
 double wheelDistance = 0;
+double encoder1Rps = 0;
+double encoder2Rps = 0;
+double wheel1Speed = 0;
+double wheel2Speed = 0;
+double wheelSpeed = 0;
 
 //Hoisted for callbacks
+void calculateEncoderSpeed();
 void handleEncoder1Interrupt();
 void handleEncoder2Interrupt();
 
+Ticker encoderTicker;
 //===========================
 
 // ========= Reciever =========
@@ -203,6 +220,15 @@ int manualTurnDirection = 0; //0 right. 1 left
 int manualTurnSpeed = 100;
 //===========================
 
+//============ Presets ============
+struct Preset {
+  String name;
+  String instructions;
+};
+
+Preset presets[9]; // Maximum 9 presets
+//=================================
+
 
 void setup() {
   Serial.begin(115200);
@@ -222,30 +248,33 @@ void setup() {
   //Call servoSetup after attaching PWM to ENA, ENB pins
   servoSetup();
 
-  pinMode(LED,OUTPUT);
+  //pinMode(LED,OUTPUT);
   delay(500);
-  digitalWrite(LED,HIGH);
+  //digitalWrite(LED,HIGH);
 
   // =============== Marquer WEB ===============
   setupMarquerWeb();
 
   delay(500);
-  digitalWrite(LED,LOW);
+  //digitalWrite(LED,LOW);
 
   // Set the callback function to handle POST messages
   setWebMessageCallback([](String message) {
     Serial.println("Received message via POST:");
     Serial.println(message);
     // Input Handling
-    if(message.startsWith("Remote")){
-      handleWifiRemoteInput(message.substring(7));
-      
+    if (message.startsWith("PRESETS")) {
+      savePresets(message); //Preset commands
+    } else if(message.startsWith("Remote")){
+      handleWifiRemoteInput(message.substring(7)); //Remote commands
     } else {
-      handleInput(message);
+      handleInput(message);//Global commands. Commands will be capitalized
     }
     
   });
   // =============== Marquer WEB END ===============
+
+  displayUiSetup(); //Also setup keypad and presets
 
   //========= L298N =========
   // Set all motor control pins as outputs
@@ -275,6 +304,9 @@ void setup() {
   // Attach interrupts to encoder pins
   attachInterrupt(digitalPinToInterrupt(ENCODER1_PIN), handleEncoder1Interrupt, RISING);
   attachInterrupt(digitalPinToInterrupt(ENCODER2_PIN), handleEncoder2Interrupt, RISING);
+
+  // Set up the encoderTicker to call calculateEncoderSpeed at interval
+  encoderTicker.attach_ms(encoderSpeedInterval, calculateEncoderSpeed);
   //===========================
 
   // ========= MPU9250 =========
@@ -350,29 +382,28 @@ void loop() {
   setSpeedAndDir();
   //===========================
 
-
   //========= Encoder =========
   encoderCaclculations();
   //===========================
 
+  //========= Display UI =========
+  displayUiLoop();
+  //===========================
+
   // Once every 200ms stuff
-  if (currentTime - lastSerialUpdateTime >= 400) {
+  if (currentTime - lastSerialUpdateTime >= 300) {
     loopMarquerWeb();
 
-    float encoder1Speed = (encoder1Count - lastEncoder1Count) * (1000.0 / ENCODER_RESOLUTION); // Rotations per second
-    float encoder2Speed = (encoder2Count - lastEncoder2Count) * (1000.0 / ENCODER_RESOLUTION); // Rotations per second
+    //calculateEncoderSpeed(); //Now called by ticker
 
     // Send data to Serial Plotter in a single line with comma-separated values
-    Serial.print("Encoder1Speed:"); Serial.print(encoder1Speed);Serial.print(", ");
-    Serial.print("Encoder2Speed:"); Serial.print(encoder2Speed);Serial.print(", ");
-    Serial.print("Ultrasonic:"); Serial.print(ultrasonicDistance);Serial.print("\t");
-
-    // Print out the yaw value
+    Serial.print("Ultrasonic:"); Serial.print(ultrasonicDistance);Serial.print(", ");
+    Serial.print("Wheel Speed mps:"); Serial.print(wheelSpeed);Serial.print(", ");
+    Serial.print("Wheel Speed cms:"); Serial.print(wheelSpeed*100);Serial.print(", ");
+    Serial.print("Wheel Speed kmh:"); Serial.print(wheelSpeed*3.6);Serial.print(", ");
     Serial.print("Yaw: "); Serial.print(yaw,6);
     Serial.print("\n");
 
-    lastEncoder1Count = encoder1Count;
-    lastEncoder2Count = encoder2Count;
     lastSerialUpdateTime = currentTime;
 
     //WebPrint("sR:"+String(speedA));

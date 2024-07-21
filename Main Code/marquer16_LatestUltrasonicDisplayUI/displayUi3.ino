@@ -12,31 +12,6 @@
 
 */
 
-//====== Display ======
-#include <TFT_eSPI.h> // Graphics and font library for ILI9341 driver chip
-#include <SPI.h>
-#include <Arduino_JSON.h>
-#include <Preferences.h>
-//#include <Arduino.h> 
-
-//Define custom colors
-#define TFT_GREY 0x5AEB // New colour
-#define TFT_ORANGE 0xFBE0 // New colour
-#define TFT_WHITE 0xFFFF // New colour
-#define TFT_PURPLE 0x209c // New colour
-
-TFT_eSPI tft = TFT_eSPI();  // Invoke library
-
-//variables
-int uiPage = 1;
-unsigned int old_uiPage = uiPage;
-bool staticContentDrawn = false;
-bool uiDebug = false;
-
-//UIPages variables
-int selectedPreset = 1;  // Current preset
-bool connected = false;  // Change this to true if app is connected
-static int preparingProgress = 0;  // Example value for progress out of 100
 
 //============ Keypad ============
 #include <Wire.h>
@@ -211,6 +186,7 @@ void handleUiInputs(char input){
         case '1':
           uiPage = 2;
           staticContentDrawn = false;
+          manualMode = true;
           ui_drawManualModePage();
           break;
         case '2':
@@ -231,6 +207,7 @@ void handleUiInputs(char input){
           uiPage = 1;
           staticContentDrawn = false;
           ui_drawHomeScreen();
+          manualMode = false;
           break;
         default:
           Serial.println("Invalid input 2. UI page 2");

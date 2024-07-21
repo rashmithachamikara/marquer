@@ -1,6 +1,7 @@
 // Vector to hold commandList
 std::vector<String> commandList;
 int currentStep = 0;
+int nextStep = 0;
 int totalSteps = 0; // Variable to store the total number of steps
 
 // Function to set the command list from a given command string.
@@ -14,7 +15,7 @@ void setCommandList(const String& cmd) {
       end = cmd.indexOf(' ', start);
   }
   commandList.push_back(cmd.substring(start));
-  currentStep = 0; // Reset the step counter
+  nextStep = 0; // Reset the step counter
   totalSteps = commandList.size(); // Update the total steps
   Serial.println("New command set: " + cmd);
   WebPrintln("New command set: " + cmd);
@@ -22,22 +23,28 @@ void setCommandList(const String& cmd) {
 
 // Function to execute the next command.
 void nextCommand() {
-  if (currentStep < commandList.size()) {
-      String word = commandList[currentStep];
+  if (nextStep < commandList.size()) {
+      String word = commandList[nextStep];
       // Process the word
       Serial.println(word);
       ticker.once_ms(2000, std::bind(runCurrentCommand, word));
-      currentStep++;
+      nextStep++;
+      currentStep = (nextStep > 0) ? nextStep-1 : nextStep;
   } else {
-      Serial.println("Commandlist complete! No more steps.");
-      WebPrintln("Commandlist complete! No more steps.");
+      commandListEndTime = millis();
+      commandListExecutionTime = commandListStartTime-commandListEndTime;
       executingCommandList = false;
+      Serial.println("Commandlist complete! No more steps.");
+      //Change UI Page
+      uiPage = 6;
+      staticContentDrawn = false;
+      ui_drawTaskReportPage();
   }
 }
 
 void runCurrentCommand(String command){
   ledBlink(3);
-  Serial.println("Command [" + String(currentStep) +"]:'" + command + "'passed to input handler!");
-  WebPrintln("Command [" + String(currentStep) +"]:'" + command + "'passed to input handler!");
+  Serial.println("Command [" + String(nextStep) +"]:'" + command + "'passed to input handler!");
+  WebPrintln("Command [" + String(nextStep) +"]:'" + command + "'passed to input handler!");
   handleInput(command);
 }

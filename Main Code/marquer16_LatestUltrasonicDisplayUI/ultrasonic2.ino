@@ -36,6 +36,6 @@ void ultrasonicLoop() {
 
   if(ultrasonicDistance<15){
     Serial.println("Obstruction detected!");
-    handleInput("BREAKALL");
+    //handleInput("BREAKALL");
   }
 }

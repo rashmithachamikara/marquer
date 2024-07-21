@@ -89,6 +89,33 @@ volatile bool measuring = false;
 void IRAM_ATTR echoISR();
 //===========================
 
+//====== Display ======
+#include <TFT_eSPI.h> // Graphics and font library for ILI9341 driver chip
+#include <SPI.h>
+#include <Arduino_JSON.h>
+#include <Preferences.h>
+//#include <Arduino.h> 
+
+//Define custom colors
+#define TFT_GREY 0x5AEB // New colour
+#define TFT_ORANGE 0xFBE0 // New colour
+#define TFT_WHITE 0xFFFF // New colour
+#define TFT_PURPLE 0x209c // New colour
+
+TFT_eSPI tft = TFT_eSPI();  // Invoke library
+
+//variables
+int uiPage = 1;
+unsigned int old_uiPage = uiPage;
+bool staticContentDrawn = false;
+bool uiDebug = false;
+bool manualMode = false;
+
+//UIPages variables
+int selectedPreset = 1;  // Current preset
+bool connected = false;  // Change this to true if app is connected
+static int preparingProgress = 0;  // Example value for progress out of 100
+//======================================
 
 // ========= Encoders =========
 
@@ -207,6 +234,9 @@ int movingBaseSpeed = 90;
 // ========= Command List (Context switches etc) =========
 Ticker ticker; //Ticker instance for timed calls
 bool executingCommandList = false;
+unsigned long commandListStartTime = 0;
+unsigned long commandListEndTime = 0;
+unsigned long commandListExecutionTime = 0;
 
 //Hosited for callbacks
 void runCurrentCommand(String command);
@@ -267,9 +297,13 @@ void setup() {
       savePresets(message); //Preset commands
     } else if(message.startsWith("Remote")){
       handleWifiRemoteInput(message.substring(7)); //Remote commands
+    } else if(message.startsWith("Keypad")){
+      handleUiInputs(message.charAt(7)); //UI commands
     } else {
       handleInput(message);//Global commands. Commands will be capitalized
     }
+
+    
     
   });
   // =============== Marquer WEB END ===============

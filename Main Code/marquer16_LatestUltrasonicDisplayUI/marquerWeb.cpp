@@ -110,6 +110,18 @@ void setupMarquerWeb() {
     }
   });
 
+  // Route to serve the keypad.html file when /marquer is accessed
+  server.on("/keypad", HTTP_GET, [](AsyncWebServerRequest *request){
+    Serial.println("Serving /presets.html");
+    if (LittleFS.exists("/keypad.html")) {
+      request->send(LittleFS, "/keypad.html", "text/html");
+      Serial.println("File served successfully");
+    } else {
+      request->send(404, "text/plain", "File not found");
+      Serial.println("File not found");
+    }
+  });
+
   // Route to serve the chart.js file when /marquer is accessed
   server.on("/chart.js", HTTP_GET, [](AsyncWebServerRequest *request){
     Serial.println("Serving /chart.js");

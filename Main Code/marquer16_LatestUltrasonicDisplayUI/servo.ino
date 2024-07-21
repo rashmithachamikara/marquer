@@ -17,7 +17,7 @@ void servoTurnTo(int servoAngle){
   if (servoAngle >= 0 && servoAngle <= 180) {
     // Move the servo to the specified angle
     myServo.write(servoAngle);
-    Serial.print("Moving to ");
+    Serial.print("Moving servo to ");
     Serial.print(servoAngle);
     Serial.println(" degrees");
     if (executingCommandList && !correctingTurnGap) {

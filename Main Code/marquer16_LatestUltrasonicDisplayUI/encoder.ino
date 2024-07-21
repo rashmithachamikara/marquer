@@ -3,7 +3,7 @@ void IRAM_ATTR handleEncoder1Interrupt() {
   unsigned long interruptTime = millis();
   if (interruptTime - lastInterruptTime1 > 5){
     //Reduce count if reversing
-    if(reverseA && reverseB){
+    if(reverseA && reverseB && manualMode){
       encoder1Count--;
     } else {
       encoder1Count++;
@@ -18,7 +18,7 @@ void IRAM_ATTR handleEncoder2Interrupt() {
   unsigned long interruptTime = millis();
   if (interruptTime - lastInterruptTime2 > 5){
     //Reduce count if reversing
-    if(reverseA && reverseB){
+    if(reverseA && reverseB && manualMode){
       encoder2Count--;
     } else {
       encoder2Count++;

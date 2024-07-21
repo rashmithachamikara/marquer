@@ -65,27 +65,26 @@ void ui_drawHomeScreen() {
     tft.setFreeFont(&FreeSans12pt7b);  // Set font to a larger font
     tft.drawString("1. Manual mode", 10, 100);  // Draw string
     tft.drawString("2. Presets", 10, 130);  // Draw string
-    tft.drawString("3. Settings", 10, 160);  // Draw string
 
     // Draw App connection status
     tft.setTextDatum(MC_DATUM);  // Set text datum to middle center
     tft.setFreeFont(&FreeSans9pt7b);  // Set font to a larger font
-    if (connected) {
-      tft.setTextColor(TFT_GREEN, TFT_WHITE);  // Set text color to green with white background
-      tft.drawString("App connection: Connected", 160, 200, 2);  // Draw string
-    } else {
-      tft.setTextColor(TFT_RED, TFT_WHITE);  // Set text color to red with white background
-      tft.drawString("App connection: Not connected", 160, 200, 2);  // Draw string
-    }
+    // if (connected) {
+    //   tft.setTextColor(TFT_GREEN, TFT_WHITE);  // Set text color to green with white background
+    //   tft.drawString("App connection: Connected", 160, 200, 2);  // Draw string
+    // } else {
+    //   tft.setTextColor(TFT_RED, TFT_WHITE);  // Set text color to red with white background
+    //   tft.drawString("App connection: Not connected", 160, 200, 2);  // Draw string
+    // }
 
     // Draw IP Address
+    tft.setTextColor(TFT_GREEN, TFT_WHITE);
     IPAddress IP = WiFi.softAPIP();
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
-    tft.drawString("IP Address: " + IP.toString(), 160, 220);  // Draw string
+    tft.drawString("IP Address: " + IP.toString(), 160, 180);  // Draw string
 
     // Draw small gray text
     tft.setTextColor(TFT_GREY, TFT_WHITE);  // Set text color to gray with white background
-    tft.drawString("Marquer Drawing Systems v1.0", 160, 250, 2);  // Draw string
+    tft.drawString("Marquer Drawing Systems v1.0", 160, 230, 2);  // Draw string
 
     //Set static update to 0
     staticContentDrawn = true;
@@ -228,7 +227,7 @@ void ui_drawPreparingPage() {
     uiPage = 5;
     staticContentDrawn = false;
     ui_drawProcessingPage();
-    //handleInput("CMDR");
+    handleInput("CMDR");
     return;
   } else {
     preparingProgress += 2;
@@ -307,9 +306,10 @@ void ui_drawProcessingPage() {
   int distanceCovered = wheelDistance;  // Distance covered in cm
   int distanceTarget = 0;  // Distance target in cm
   String direction = "left";  // Direction for rotating
-  String penStatus = "Drawing";  // Pen status
 
   //static int angle = 0; //Now replaced with yaw
+  int targetAngle = 0;
+
   static int state = 0;
 
   // === Static Content ===
@@ -356,63 +356,65 @@ void ui_drawProcessingPage() {
 
   if (currentStepCommand.startsWith("G")){
     distanceTarget = currentStepCommand.substring(1).toInt();
-    currentStepAction = "Moving " + String(distanceTarget) + "cm");
+    currentStepAction = "Moving " + String(distanceTarget) + "cm";
     state = 0;
   }
   
   if (currentStepCommand.startsWith("T")){
-    currentStepAction = "Turning " + String(currentStepCommand.substring(1) + "cm");
-    String turnDirection
+    targetAngle = currentStepCommand.substring(1).toInt();
+    currentStepAction = "Turning " + String(targetAngle) + "Deg";
+    direction = (targetAngle < 0) ? "Left" : "Right";
     state = 1;
   }
 
   if (currentStepCommand.startsWith("S")){
     currentStepAction = "Changing Pen Position";
-    String turnDirection
+    state = 2;
   }
 
   // Draw current step information
   tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
   tft.drawString("Current step: " + String(currentStep) + "/" + String(totalSteps) + "         ", 10, 70);  // Draw current step info
-  tft.drawString("Active task:  " + currentStepAction + "         ", 10, 90);  // Draw current step action
+  tft.drawString("Active task:  " + currentStepAction + "                                                 ", 10, 90);  // Draw current step action
 
   if (state == 0) {
     // Draw Straight motion information
     tft.setTextColor(TFT_MAROON, TFT_WHITE);  // Set text color
-    tft.drawString("Straight motion", 120, 125);  // Draw Straight motion label
+    tft.drawString("Straight motion           ", 120, 125);  // Draw Straight motion label
     // Draw Speedometer
-    drawSpeedometer(50, 162, 40, wheelSpeed);  // drawSpeedometer(x, y, r, z) Draws a speedometer at (x, y) with radius r. needle at z
+    drawSpeedometer(50, 162, 40, wheelSpeed*10);  // drawSpeedometer(x, y, r, z) Draws a speedometer at (x, y) with radius r. needle at z
 
     tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color
     tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
     tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
-    tft.drawString("Speed: " + String(wheelSpeed) + "m/s      ", 120, 145);  // Draw speed in text
+    tft.drawString("Speed: " + String(wheelSpeed) + "m/s                      ", 120, 145);  // Draw speed in text
     // Draw Distance
-    tft.drawString("Distance: " + String(distanceCovered) + "/" + String(distanceTarget) + " cm      ", 120, 165);  // Draw distance
-    tft.drawString("Pen Status: " + penStatus, 120, 185);  // Draw pen status
+    tft.drawString("Distance: " + String(distanceCovered) + "/" + String(distanceTarget) + " cm                        ", 120, 165);  // Draw distance
   } else if (state == 1) {
     // Draw Rotating information
     tft.setTextColor(TFT_MAROON, TFT_WHITE);  // Set text color
-    tft.drawString("Rotating", 120, 125);  // Draw Rotating label
+    tft.drawString("Rotating                  ", 120, 125);  // Draw Rotating label
     //Draw rotation meter
     drawRotatingAnimation(50, 162, 40, yaw);  // Draw rotating animation at (x, y)
 
     tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color
     tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
     tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
-    tft.drawString("Angle: " + String(yaw) + " degrees", 120, 145);  // Draw angle
-    tft.drawString("Target: " + desiredYaw, 120, 165);  // Draw direction
-    tft.drawString("Pen Status: " + penStatus, 120, 185);  // Draw pen status
-  }
-
+    tft.drawString("Angle: " + String(yaw) + " degrees                        ", 120, 145);  // Draw angle
+    tft.drawString("Direction: " + direction + "                              ", 120, 165);  // Draw turning direction
+  } 
 }
 
 void ui_drawTaskReportPage() {
+  // Convert milliseconds to minutes and seconds
+  unsigned long totalSeconds = commandListExecutionTime / 1000;
+  unsigned long minutes = totalSeconds / 60;
+  unsigned long seconds = totalSeconds % 60;
+
   // Example Variables
-  String presetName = "Moving 100cm";  // Example preset name
-  String timeTaken = "12 min 30 sec";  // Example time taken
+  String presetName = presets[selectedPreset-1].name;  // Get from commandList
+  String timeTaken = String(minutes) + " min " + String(seconds) + " sec";  // Example time taken
   String distanceTravelled = "150 cm";  // Example distance travelled
-  String avgSpeed = "12.5 cm/s";  // Example average speed
 
   // === Static Content ===
   if (staticContentDrawn==false){
@@ -424,20 +426,13 @@ void ui_drawTaskReportPage() {
     tft.setFreeFont(&FreeSansBold18pt7b);  // Set font to a large bold font
     tft.drawString("Task report", 160, 20);  // Draw string in the middle of the screen
 
-    // Draw preset name
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to blue with white background
+    tft.setTextColor(TFT_GREEN, TFT_WHITE);
     tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font
-    tft.setTextDatum(TL_DATUM);  // Set text datum to top-left corner
-    tft.drawString("Preset name: " + presetName, 10, 60);  // Draw preset name
+    tft.drawString("Task Completed Successfully!", 160, 100); 
 
-    // Draw time taken
-    tft.drawString("Time taken: " + timeTaken, 10, 80);  // Draw time taken
-
-    // Draw distance travelled
-    tft.drawString("Distance travelled: " + distanceTravelled, 10, 100);  // Draw distance travelled
-
-    // Draw average speed
-    tft.drawString("Avg. Speed: " + avgSpeed, 10, 120);  // Draw average speed
+    tft.setTextColor(TFT_BLACK, TFT_WHITE);
+    tft.drawString("Preset name: " + presetName, 160, 120);  // Draw preset name
+    tft.drawString("Time taken: " + timeTaken, 160, 140);  // Draw time taken
 
     // Draw "Press * to return to menu"
     tft.setTextColor(TFT_GREY, TFT_WHITE);  // Set text color to grey with white background

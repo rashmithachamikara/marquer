@@ -46,12 +46,18 @@ void handleInput(String input) {
   } else if (input.startsWith("CMDR")) {
     Serial.print("CommandList Execution Started!");
     WebPrintln("CommandList Execution Started!");
+    commandListStartTime = millis();
     executingCommandList = true;
     nextCommand();
   } else if (input.startsWith("CMDH")) {
     executingCommandList = false;
     Serial.print("CommandList Execution Halted!");
     WebPrintln("CommandList Execution Halted!");
+  } else if (input.startsWith("CMDN")) {
+    Serial.print("Force Next Command");
+    WebPrintln("Force Next Command");
+    handleInput("BREAKALL");
+    nextCommand();
   } else if (input.startsWith("CMD")) {
     String newCommand = input.substring(3);
     Serial.print("New command recieved");

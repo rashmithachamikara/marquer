@@ -472,6 +472,10 @@ void loop() {
 }
 
 void distanceMove(){
+  //Ensure forward moving
+  reverseA = false;
+  reverseB = false;
+
   int slowingDistance=10; //Slow down from last 20cm
 
   remaigningDistance = targetDistance-wheelDistance;

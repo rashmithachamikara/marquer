@@ -283,6 +283,7 @@ void handleUiInputs(char input){
         case '*':
           uiPage = 3;
           staticContentDrawn = false;
+          handleInput("BREAKALL");
           ui_drawPresetsPage();
           break;
         case '2':

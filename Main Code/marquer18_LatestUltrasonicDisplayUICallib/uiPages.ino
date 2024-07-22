@@ -110,7 +110,7 @@ void ui_drawManualModePage() {
     tft.drawString("Use the app to move", 160, 60);  // Draw string
     tft.setTextDatum(ML_DATUM);  // Set text datum to mid left
     tft.fillCircle(30, 100, 18, TFT_ORANGE);  // Draw filled circle for A
-    tft.drawString("A    Reset Distance", 22, 100);  // Draw string
+    tft.drawString("A    Reset Dist.", 22, 100);  // Draw string
     tft.fillCircle(30, 150, 18, TFT_ORANGE);  // Draw filled circle for B
     tft.drawString("B    Break", 22, 150);  // Draw string
     tft.fillCircle(190, 100, 18, TFT_ORANGE);  // Draw filled circle for C
@@ -209,7 +209,7 @@ void ui_drawPreparingPage() {
     tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
     tft.setFreeFont(&FreeSans12pt7b);  // Set font to a bit large font
     tft.drawString("Current preset: " + String(selectedPreset), 160, 80);  // Draw Current preset in the middle
-    tft.drawString("Preparing equipment", 160, 110);  // Draw Preparing in the middle
+    tft.drawString("Preparing to draw", 160, 110);  // Draw Preparing in the middle
 
     tft.setTextColor(TFT_BLACK, TFT_WHITE);  // Set text color to black with white background
     tft.setFreeFont(&FreeSans9pt7b);  // Set font to a smaller font

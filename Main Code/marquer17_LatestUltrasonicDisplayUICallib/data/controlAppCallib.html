@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*" />
+    <title>Marquer Control</title>
+    <script src="chart.js"></script>
+    <style>
+        * {
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            margin: 10px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .slider-container {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .slider-container label {
+            flex: 1;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 2;
+        }
+
+        .slider-container .adjust-buttons {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slider-container .adjust-buttons button {
+            margin: 2px 0;
+            width: 30px;
+        }
+
+        .direction-buttons,
+        .control-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .direction-buttons button,
+        .control-buttons button {
+            width: 48%;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        #console {
+            height: 150px;
+            background: #333;
+            color: #fff;
+            padding: 10px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .apply-button,
+        .brake-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .auto-scroll-toggle {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .auto-scroll-toggle label {
+            margin-left: 10px;
+        }
+
+        .pid-container {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            justify-content: space-evenly;
+            font-size: 16px;
+            flex-wrap: wrap;
+        }
+
+        .pid-container label {
+            margin: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .pid-container input {
+            margin-left: 5px;
+            width: 60px;
+            font-size: 16px;
+        }
+
+        .pid-container .apply-button {
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .input-container {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-container input[type="text"] {
+            flex: 2;
+            padding: 5px;
+            font-size: 16px;
+        }
+
+        .input-container input[type="checkbox"] {
+            flex: 0 0 auto;
+            margin-left: 10px;
+        }
+
+        .input-container button {
+            flex: 0 0 auto;
+            padding: 5px 10px;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+
+        .callibration-container {
+            max-height: 400px;
+            overflow: scroll;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Marquer Control Debug</h1>
+    <div class="container">
+        <div class="slider-container">
+            <label for="motorA">Motor A Speed: <span id="motorASpeed">0</span></label>
+            <input type="range" id="motorA" name="motorA" min="0" max="250" value="0" oninput="updateSpeed('A')">
+            <div class="adjust-buttons">
+                <button onclick="adjustSpeed('A', 1)">+</button>
+                <button onclick="adjustSpeed('A', -1)">-</button>
+            </div>
+        </div>
+        <div class="slider-container">
+            <label for="motorB">Motor B Speed: <span id="motorBSpeed">0</span></label>
+            <input type="range" id="motorB" name="motorB" min="0" max="250" value="0" oninput="updateSpeed('B')">
+            <div class="adjust-buttons">
+                <button onclick="adjustSpeed('B', 1)">+</button>
+                <button onclick="adjustSpeed('B', -1)">-</button>
+            </div>
+        </div>
+        <button class="apply-button" onclick="applySpeed()">Apply Speed</button>
+        <div class="slider-container">
+            <label for="bothMotors">Both Motors Speed: <span id="bothMotorsSpeed">0</span></label>
+            <input type="range" id="bothMotors" name="bothMotors" min="0" max="250" value="0"
+                oninput="updateSpeed('Both')">
+            <div class="adjust-buttons">
+                <button onclick="adjustSpeed('Both', 1)">+</button>
+                <button onclick="adjustSpeed('Both', -1)">-</button>
+            </div>
+        </div>
+        <button class="apply-button" onclick="applyBothSpeed()">Apply Both Motors Speed</button>
+        <div class="control-buttons">
+            <button class="brake-button" onclick="brake()">Brake</button>
+            <button class="brake-button" onclick="resetStat()">Reset Stat</button>
+        </div>
+        <div class="callibration-container">
+
+            <h2>PID</h2>
+            <div class="pid-container">
+                <label for="Kp">P: <input type="number" id="Kp" step="0.1" value="%Kp%"></label>
+                <label for="Ki">I: <input type="number" id="Ki" step="0.1" value="%Ki%"></label>
+                <label for="Kd">D: <input type="number" id="Kd" step="0.1" value="%Kd%"></label>
+                <label for="minPidSpeed">minPidSpeed: <input type="number" id="minPidSpeed" step="1"
+                        value="%minPidSpeed%"></label>
+                <label for="maxPidSpeed">maxPidSpeed: <input type="number" id="maxPidSpeed" step="1"
+                        value="%maxPidSpeed%"></label>
+                <label for="pidInterval">pidInterval: <input type="number" id="pidInterval" step="1"
+                        value="%pidInterval%"></label>
+            </div>
+            <h2>Turning</h2>
+            <div class="pid-container">
+                <label for="turnKp">turnKp: <input type="number" id="turnKp" step="0.1" value="%turnKp%"></label>
+                <label for="turnKi">turnKi: <input type="number" id="turnKi" step="0.1" value="%turnKi%"></label>
+                <label for="turnKd">turnKd: <input type="number" id="turnKd" step="0.1" value="%turnKd%"></label>
+                <label for="minTurnSpeed">minTurnSpeed: <input type="number" id="minTurnSpeed" step="1"
+                        value="%minTurnSpeed%"></label>
+                <label for="maxTurnSpeed">maxTurnSpeed: <input type="number" id="maxTurnSpeed" step="1"
+                        value="%maxTurnSpeed%"></label>
+                <label for="turnBaseSpeed">turnBaseSpeed: <input type="number" id="turnBaseSpeed" step="1"
+                        value="%turnBaseSpeed%"></label>
+                <label for="turnErrorMargin">turnErrorMargin: <input type="number" id="turnErrorMargin" step="0.01"
+                        value="%turnErrorMargin%"></label>
+                <label for="overshootMargin">overshootMargin: <input type="number" id="overshootMargin" step="0.01"
+                        value="%overshootMargin%"></label>
+            </div>
+            <h2>DistanceMove</h2>
+            <div class="pid-container">
+                <label for="distanceMoveOvershoot">distanceMoveOvershoot: <input type="number"
+                        id="distanceMoveOvershoot" step="0.01" value="%distanceMoveOvershoot%"></label>
+                <label for="movingBaseSpeed">movingBaseSpeed: <input type="number" id="movingBaseSpeed" step="1"
+                        value="%movingBaseSpeed%"></label>
+            </div>
+            <h2>Remote</h2>
+            <div class="pid-container">
+                <label for="manualTurnSpeed">manualTurnSpeed: <input type="number" id="manualTurnSpeed" step="1"
+                        value="%manualTurnSpeed%"></label>
+                <label for="wifiMoveSpeed">wifiMoveSpeed: <input type="number" id="wifiMoveSpeed" step="1"
+                        value="%wifiMoveSpeed%"></label>
+            </div>
+            <h2>MPU9250</h2>
+            <div class="pid-container">
+                <label for="gyroBiasZ">gyroBiasZ: <input type="number" id="gyroBiasZ" value="%gyroBiasZ%"></label>
+            </div>
+
+
+        </div>
+        <button class="apply-button" onclick="getCallib()">Get Callibration Values</button>
+        <button class="apply-button" onclick="applyCallib()">Apply Callibration Values</button>
+        <button class="apply-button" onclick="saveCallib()">Save Callibration Values</button>
+        <!-- <button class="apply-button" onclick="applyPID()">Apply PID</button> -->
+        <div class="auto-scroll-toggle">
+            <input type="checkbox" id="autoScrollToggle" checked>
+            <label for="autoScrollToggle">Auto-scroll</label>
+        </div>
+        <canvas id="yawChart" width="600" height="200"></canvas>
+        <pre id="console"></pre>
+        <div class="input-container">
+            <input type="text" id="commandInput" placeholder="Enter command">
+            <input type="checkbox" id="newlineCheckbox">
+            <label for="newlineCheckbox">/n</label>
+            <button onclick="sendCommand()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const motorSpeeds = { A: 0, B: 0, C: 0 };
+        const data = [];
+        const maxDataPoints = 100;
+        let autoScrollEnabled = true;
+
+        // Chart.js setup
+        const ctx = document.getElementById('yawChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array(maxDataPoints).fill(''), // Placeholder labels
+                datasets: [{
+                    label: 'Yaw Data',
+                    data: Array(maxDataPoints).fill(0),
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 0.4,
+                    pointRadius: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                animation: {
+                    duration: 0 // Disable animation for real-time updates
+                },
+                scales: {
+                    x: {
+                        display: false // Hide x-axis labels
+                    },
+                    y: {
+                        zeroLineColor: 'rgba(0, 0, 0, 1)', // Adjust the color as needed
+                        beginAtZero: true,
+                        suggestedMin: -5,
+                        suggestedMax: 5
+                    }
+                }
+            }
+        });
+
+        function updateChart() {
+            if (!autoScrollEnabled) return;
+
+            chart.data.labels = data.slice(-maxDataPoints).map((_, i) => i + 1);
+            chart.data.datasets[0].data = data.slice(-maxDataPoints);
+            chart.update();
+        }
+
+        function updateSpeed(motor) {
+            let speed;
+            if (motor === 'Both') {
+                speed = document.getElementById('bothMotors').value;
+                document.getElementById('bothMotorsSpeed').innerText = speed;
+                motorSpeeds.C = speed;
+            } else {
+                speed = document.getElementById(`motor${motor}`).value;
+                document.getElementById(`motor${motor}Speed`).innerText = speed;
+                motorSpeeds[motor] = speed;
+            }
+        }
+
+        function adjustSpeed(motor, increment) {
+            let slider, speed;
+            if (motor === 'Both') {
+                slider = document.getElementById('bothMotors');
+                speed = parseInt(slider.value) + increment;
+                if (speed < 0) speed = 0;
+                if (speed > 250) speed = 250;
+                slider.value = speed;
+                document.getElementById('bothMotorsSpeed').innerText = speed;
+                motorSpeeds.C = speed;
+            } else {
+                slider = document.getElementById(`motor${motor}`);
+                speed = parseInt(slider.value) + increment;
+                if (speed < 0) speed = 0;
+                if (speed > 250) speed = 250;
+                slider.value = speed;
+                document.getElementById(`motor${motor}Speed`).innerText = speed;
+                motorSpeeds[motor] = speed;
+            }
+        }
+
+        function applySpeed() {
+            const log = `Applying speeds - Motor A: ${motorSpeeds.A}, Motor B: ${motorSpeeds.B}\n`;
+            addLog(log);
+            sendToESP32(`A${motorSpeeds.A}`);
+            sendToESP32(`B${motorSpeeds.B}`);
+        }
+
+        function applyBothSpeed() {
+            const log = `Applying both motors speed: ${motorSpeeds.C}\n`;
+            addLog(log);
+            sendToESP32(`C${motorSpeeds.C}`);
+        }
+
+        function applyPID() {
+            const pValue = document.getElementById('pValue').value;
+            const iValue = document.getElementById('iValue').value;
+            const dValue = document.getElementById('dValue').value;
+            const log = `Applying PID - P: ${pValue}, I: ${iValue}, D: ${dValue}\n`;
+            addLog(log);
+            sendToESP32(`P${pValue}`);
+            sendToESP32(`I${iValue}`);
+            sendToESP32(`D${dValue}`);
+        }
+
+        function brake() {
+            const log = `Applying brake - Stopping both motors\n`;
+            addLog(log);
+            sendToESP32(`A0`);
+            sendToESP32(`B0`);
+            sendToESP32(`BREAKALL`);
+        }
+
+        function resetStat() {
+            const log = `Resetting Stats\n`;
+            data.length = 0;
+            addLog(log);
+            sendToESP32(`R`);
+        }
+
+        function callibDataReceived(callibData) {
+            // Check that callibData has the expected number of elements (15 in this case)
+            if (callibData.length === 19) {
+                // Set values for PID section
+                document.getElementById("Kp").value = callibData[0];
+                document.getElementById("Ki").value = callibData[1];
+                document.getElementById("Kd").value = callibData[2];
+                document.getElementById("minPidSpeed").value = callibData[3];
+                document.getElementById("maxPidSpeed").value = callibData[4];
+
+                // Set values for Turning section
+                document.getElementById("turnKp").value = callibData[5];
+                document.getElementById("turnKi").value = callibData[6];
+                document.getElementById("turnKd").value = callibData[7];
+                document.getElementById("minTurnSpeed").value = callibData[8];
+                document.getElementById("maxTurnSpeed").value = callibData[9];
+                document.getElementById("turnBaseSpeed").value = callibData[10];
+                document.getElementById("turnErrorMargin").value = callibData[11];
+                document.getElementById("overshootMargin").value = callibData[12];
+                document.getElementById("pidInterval").value = callibData[18];
+
+                // Set values for DistanceMove section
+                document.getElementById("distanceMoveOvershoot").value = callibData[13];
+                document.getElementById("movingBaseSpeed").value = callibData[14];
+
+                // Set values for Remote section (additional fields, if any)
+                document.getElementById("manualTurnSpeed").value = callibData[15];
+                document.getElementById("wifiMoveSpeed").value = callibData[16];
+
+                // Set values for MPU9250 section
+                document.getElementById("gyroBiasZ").value = callibData[17];
+
+            } else {
+                console.error("Unexpected number of calibration data points. Expected 15, got " + callibData.length);
+            }
+        }
+
+        function applyCallib() {
+            // Collect values from the form fields
+            const Kp = document.getElementById("Kp").value;
+            const Ki = document.getElementById("Ki").value;
+            const Kd = document.getElementById("Kd").value;
+            const minPidSpeed = document.getElementById("minPidSpeed").value;
+            const maxPidSpeed = document.getElementById("maxPidSpeed").value;
+            const turnKp = document.getElementById("turnKp").value;
+            const turnKi = document.getElementById("turnKi").value;
+            const turnKd = document.getElementById("turnKd").value;
+            const minTurnSpeed = document.getElementById("minTurnSpeed").value;
+            const maxTurnSpeed = document.getElementById("maxTurnSpeed").value;
+            const turnBaseSpeed = document.getElementById("turnBaseSpeed").value;
+            const turnErrorMargin = document.getElementById("turnErrorMargin").value;
+            const overshootMargin = document.getElementById("overshootMargin").value;
+            const distanceMoveOvershoot = document.getElementById("distanceMoveOvershoot").value;
+            const movingBaseSpeed = document.getElementById("movingBaseSpeed").value;
+            const manualTurnSpeed = document.getElementById("manualTurnSpeed").value;
+            const wifiMoveSpeed = document.getElementById("wifiMoveSpeed").value;
+            const gyroBiasZ = document.getElementById("gyroBiasZ").value;
+            const pidInterval = document.getElementById("pidInterval").value;
+
+            // Construct a comma-separated string
+            const prefix = "Callib_Set:";
+            const formData = [
+                Kp, Ki, Kd, minPidSpeed, maxPidSpeed,
+                turnKp, turnKi, turnKd, minTurnSpeed, maxTurnSpeed,
+                turnBaseSpeed, turnErrorMargin, overshootMargin,
+                distanceMoveOvershoot, movingBaseSpeed,
+                manualTurnSpeed, wifiMoveSpeed, gyroBiasZ, pidInterval
+            ].join(',');
+
+            // Send the string to the ESP32
+            sendToESP32(prefix + formData);
+        }
+
+
+
+        function addLog(message) {
+            const consoleElement = document.getElementById('console');
+            const logEntry = document.createElement('span');
+            logEntry.textContent = message;
+            consoleElement.appendChild(logEntry);
+            if (document.getElementById('autoScrollToggle').checked) {
+                consoleElement.scrollTop = consoleElement.scrollHeight;
+            }
+        }
+
+        // Function to send input command to ESP32
+        function sendCommand() {
+            let command = document.getElementById('commandInput').value;
+            addLog(`Sent command: ${command}\n`);
+            if (document.getElementById('newlineCheckbox').checked) {
+                command += '\n';
+            }
+            sendToESP32(command);
+        }
+
+        function getCallib() {
+            sendToESP32("Callib_Get");
+        }
+
+        function sendToESP32(command) {
+            const esp32IP = window.location.hostname;
+            fetch(`http://${esp32IP}/post_command`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `message=${encodeURIComponent(command)}`
+            })
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Response from ESP32:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        let socket;
+        const reconnectInterval = 5000;
+
+        function connectWebSocket() {
+            socket = new WebSocket(`ws://${window.location.hostname}/ws`);
+
+            socket.onmessage = function (event) {
+                const message = event.data;
+                addLog(`${message}`);
+
+                // Handle yaw messages
+                const yawMatch = message.match(/yaw:\s*(-?\d+(\.\d+)?)/);
+                if (yawMatch) {
+                    const yawValue = parseFloat(yawMatch[1]);
+                    data.push(yawValue);
+                    if (data.length > maxDataPoints) data.shift();
+                    updateChart();
+                }
+
+                // Handle Callib_data messages
+                if (message.startsWith("Callib_data:")) {
+                    const callibDataString = message.substring("Callib_data:".length).trim();
+                    const callibData = callibDataString.split(',').map(value => parseFloat(value.trim()));
+                    callibDataReceived(callibData);
+                }
+            };
+
+            socket.onopen = function (event) {
+                addLog('WebSocket connection established.\n');
+            };
+
+            socket.onclose = function (event) {
+                addLog('WebSocket connection closed. Attempting to reconnect...\n');
+                setTimeout(connectWebSocket, reconnectInterval);
+            };
+
+            socket.onerror = function (error) {
+                addLog(`WebSocket error: ${error.message}\n`);
+            };
+        }
+
+        document.getElementById('autoScrollToggle').addEventListener('change', function () {
+            autoScrollEnabled = this.checked;
+        });
+
+        connectWebSocket();
+
+    </script>
+
+</body>
+
+</html>

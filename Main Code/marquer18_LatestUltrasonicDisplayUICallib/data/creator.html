@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marquer Creator</title>
+    <style>
+        ::-webkit-scrollbar {
+            -webkit-appearance: none;
+        }
+
+        ::-webkit-scrollbar:vertical {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar:horizontal {
+            height: 12px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, .5);
+            border-radius: 10px;
+            border: 2px solid #ffffff;
+        }
+
+        ::-webkit-scrollbar-track {
+            border-radius: 10px;
+            background-color: #ffffff;
+        }
+
+        html {
+            -webkit-overflow-scrolling: auto
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            /* height: 100vh; */
+            box-sizing: border-box;
+        }
+
+        .header {
+            margin: 0;
+            height: 10vh;
+            background-color: #1897b1;
+            color: white;
+        }
+
+        h1 {
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        label {
+            margin-top: 10px;
+            display: block;
+        }
+
+        select,
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        button#addButton {
+            background-color: #4CAF50;
+            color: white;
+            width: 30%;
+        }
+
+        button#savePresetButton {
+            background-color: #007bff;
+            color: white;
+            width: 30%;
+        }
+
+        button#goToPresetsButton {
+            background-color: #f58220;
+            color: white;
+            width: 30%;
+        }
+
+        button.edit-button {
+            background-color: #eaff07;
+            color: black;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        button.delete-button {
+            background-color: #ea1b1b;
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .instruction-list {
+            list-style-type: none;
+            padding: 0;
+            overflow-y: scroll;
+            max-height: 200px;
+        }
+
+        .instruction-list li {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .edit-form {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+
+        #previewDiv {
+            display: block;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            height: 450px;
+            overflow: auto;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .footer {
+            margin: 0;
+            height: 10vh;
+            background-color: #1897b1;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer button {
+            margin: 0 10px;
+            background-color: azure;
+            color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1 id="heading">Create new preset</h1>
+    </div>
+
+    <div class="container">
+        <label for="directionInput">Select Direction:</label>
+        <select id="directionInput" onchange="toggleAngleInput()">
+            <option value="Forward">Forward</option>
+            <option value="Left">Left</option>
+            <option value="Right">Right</option>
+            <option value="CustomAngle">Custom Angle</option>
+        </select>
+
+        <div id="angleInputContainer" style="display: none;">
+            <label for="angleInput">Enter Angle (degrees):</label>
+            <input type="number" id="angleInput" placeholder="Enter angle in degrees">
+        </div>
+
+        <label for="distanceInput">Enter Distance (cm):</label>
+        <input type="number" id="distanceInput" placeholder="Enter distance in centimeters">
+
+        <button id="addButton" onclick="addInstruction()">Add</button>
+
+        <ul id="instructionList" class="instruction-list"></ul>
+        <div id="previewDiv"></div>
+
+        <br>
+        <button id="savePresetButton" onclick="savePreset()">Save</button>
+        <button id="goToPresetsButton" onclick="goToPresets()">Presets</button>
+    </div>
+    <div class="footer">
+        <p>© Marquer Drawing Systems</p>
+    </div>
+
+    <script>
+        let instructions = [];
+
+        //Check if in edit mode
+        const urlParams = new URLSearchParams(window.location.search);
+        const editPresetId = urlParams.get('editPresetId');
+
+        console.log(editPresetId);
+
+        function toggleAngleInput() {
+            const directionInput = document.getElementById('directionInput');
+            const angleInputContainer = document.getElementById('angleInputContainer');
+
+            if (directionInput.value === 'CustomAngle') {
+                angleInputContainer.style.display = 'block';
+            } else {
+                angleInputContainer.style.display = 'none';
+            }
+        }
+
+
+        if (editPresetId !== null) {
+            const heading = document.getElementById("heading");
+            const saveButton = document.getElementById("savePresetButton");
+
+            saveButton.setAttribute('onclick', 'overwritePreset()');
+            saveButton.insertAdjacentHTML('afterend', '<button id="savePresetButton" onclick="savePreset()">Save Copy</button>');
+
+            let presets = JSON.parse(localStorage.getItem('presets')) || [];
+            heading.innerHTML = "Editing: " + presets[editPresetId].name;
+            instructions = presets[editPresetId].instructions;
+            updateInstructionList();
+            updatePreview();
+        }
+
+        function addInstruction() {
+            const direction = document.getElementById('directionInput').value;
+            let angle = 0;
+            let instructionText = direction;
+
+            if (direction === 'CustomAngle') {
+                angle = parseFloat(document.getElementById('angleInput').value);
+                instructionText = `Turn ${angle}`;
+            }
+
+            if (direction === 'Left') {
+                angle = -90;
+            }
+
+            if (direction === 'Right') {
+                angle = 90;
+            }
+
+            const distance = parseFloat(document.getElementById('distanceInput').value);
+            if (!isNaN(angle) && !isNaN(distance)) {
+                instructions.push({ instructionText, angle, distance });
+                updateInstructionList();
+                updatePreview();
+            }
+        }
+
+        function updateInstructionList() {
+            const list = document.getElementById('instructionList');
+            list.innerHTML = '';
+            instructions.forEach((instruction, index) => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+            ${instruction.instructionText} - ${instruction.distance} cm
+            <div>
+                <button class="delete-button" onclick="deleteInstruction(${index})">Delete</button>
+                <button class="move-up-button" onclick="moveUp(${index})">&#x25B2;</button>
+                <button class="move-down-button" onclick="moveDown(${index})">&#x25BC;</button>
+            </div>
+        `;
+                list.appendChild(listItem);
+            });
+            list.scrollTop = list.scrollHeight;
+        }
+
+
+        function deleteInstruction(index) {
+            instructions.splice(index, 1);
+            updateInstructionList();
+            updatePreview();
+        }
+
+        function moveUp(index) {
+            if (index > 0) {
+                [instructions[index - 1], instructions[index]] = [instructions[index], instructions[index - 1]];
+                updateInstructionList();
+                updatePreview();
+            }
+        }
+
+        function moveDown(index) {
+            if (index < instructions.length - 1) {
+                [instructions[index + 1], instructions[index]] = [instructions[index], instructions[index + 1]];
+                updateInstructionList();
+                updatePreview();
+            }
+        }
+
+        function savePreset() {
+            const presetName = prompt('Enter a name for this preset:');
+            if (presetName) {
+                const presets = JSON.parse(localStorage.getItem('presets')) || [];
+                const existingPreset = presets.find(preset => preset.name === presetName);
+
+                if (existingPreset) {
+                    const overwrite = confirm('This preset already exists. Do you want to overwrite it?');
+                    if (!overwrite) return; // Exit if the user does not want to overwrite
+                }
+
+                if (existingPreset) {
+                    // Update existing preset
+                    existingPreset.instructions = instructions;
+                } else {
+                    // Add new preset
+                    presets.push({ name: presetName, instructions });
+                }
+
+                console.log(instructions);
+
+                localStorage.setItem('presets', JSON.stringify(presets));
+                alert('Preset saved successfully!');
+                instructions = [];
+
+                window.location.href = 'presets';
+                updateInstructionList();
+                updatePreview();
+            }
+        }
+
+        function overwritePreset() {
+            const presets = JSON.parse(localStorage.getItem('presets')) || [];
+            const presetName = presets[editPresetId].name;
+            const overwrite = confirm('Do you want to save your changes? This will overwrite your current preset.');
+
+            if (!overwrite) return; // Exit if the user does not want to overwrite
+
+            presets[editPresetId].instructions = instructions;
+
+            localStorage.setItem('presets', JSON.stringify(presets));
+            alert('Preset saved successfully!');
+            instructions = [];
+
+            window.location.href = 'presets';
+            updateInstructionList();
+            updatePreview();
+        }
+
+
+        function goToPresets() {
+            const noSave = confirm('Do you want to leave without saving your changes?');
+            if (!noSave) return; // Exit if the user does not want to save
+
+            window.location.href = 'presets';
+        }
+
+        function updatePreview() {
+            const previewDiv = document.getElementById('previewDiv');
+            previewDiv.innerHTML = '';
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Initial canvas size
+            let canvasWidth = 1000; // Set your desired initial canvas width
+            let canvasHeight = 1000; // Set your desired initial canvas height
+
+            // Initial starting position
+            let currentX = canvasWidth / 2;
+            let currentY = canvasHeight / 2;
+            let angle = 0;
+
+            // Determine the bounds to expand the canvas
+            let minX = currentX;
+            let minY = currentY;
+            let maxX = 0;
+            let maxY = 0;
+
+            instructions.forEach((instruction, index) => {
+                const { instructionText, angle: instructionAngle, distance } = instruction;
+
+                if (instructionText.startsWith('Turn')) {
+                    angle += instructionAngle * Math.PI / 180;
+                }
+
+                if (instructionText.startsWith('Left')) {
+                    angle += -90 * Math.PI / 180;
+                }
+
+                if (instructionText.startsWith('Right')) {
+                    angle += 90 * Math.PI / 180;
+                }
+
+                const newX = currentX + distance * Math.sin(angle);
+                const newY = currentY - distance * Math.cos(angle);
+
+                // Draw start point
+                if (index === 0) {
+                    ctx.fillStyle = 'green';
+                    ctx.fillRect(currentX - 3, currentY - 3, 6, 6);
+                }
+
+                currentX = newX;
+                currentY = newY;
+
+                if ((Math.abs(currentX-minX))>maxX) {
+                    maxX = Math.abs(currentX-minX);   
+                }
+                
+                if ((Math.abs(currentY-minY))>maxY) {
+                    maxY = Math.abs(currentY-minY);   
+                }   
+            });
+
+            canvasWidth = Math.max(canvasWidth, (Math.abs(maxX))*2 + 100);
+            canvasHeight = Math.max(canvasHeight,  (Math.abs(maxY))*2 + 100);
+
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            previewDiv.appendChild(canvas);
+
+            // Reset starting position
+            currentX = canvasWidth / 2;
+            currentY = canvasHeight / 2;
+            angle = 0;
+
+            ctx.beginPath();
+            ctx.moveTo(currentX, currentY);
+
+            instructions.forEach((instruction, index) => {
+                const { instructionText, angle: instructionAngle, distance } = instruction;
+
+                if (instructionText.startsWith('Turn')) {
+                    angle += instructionAngle * Math.PI / 180;
+                }
+
+                if (instructionText.startsWith('Left')) {
+                    angle += -90 * Math.PI / 180;
+                }
+
+                if (instructionText.startsWith('Right')) {
+                    angle += 90 * Math.PI / 180;
+                }
+
+                const newX = currentX + distance * Math.sin(angle);
+                const newY = currentY - distance * Math.cos(angle);
+
+                ctx.lineTo(newX, newY);
+
+                ctx.font = '12px Arial';
+                ctx.fillStyle = 'black';
+                ctx.fillText(`${instruction.distance} cm`, (currentX + newX) / 2, (currentY + newY) / 2);
+
+                // Draw start point
+                if (index === 0) {
+                    ctx.fillStyle = 'green';
+                    ctx.fillRect(currentX - 3, currentY - 3, 6, 6);
+                }
+
+                currentX = newX;
+                currentY = newY;
+
+                if (index === instructions.length - 1) {
+                    ctx.fillStyle = 'red';
+                } else {
+                    ctx.fillStyle = 'blue';
+                }
+                ctx.fillRect(currentX - 3, currentY - 3, 6, 6);
+            });
+
+
+            // ctx.fillStyle = 'red';
+            // ctx.fillRect(currentX - 3, currentY - 3, 6, 6);
+
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Scroll to the end
+            previewDiv.scrollTo(currentX - 250, currentY - 250);
+        }
+
+    </script>
+</body>
+
+</html>

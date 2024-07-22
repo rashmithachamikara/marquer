@@ -1,35 +1,6 @@
 //Scan keypad Columns and Rows to get any avialble input from keypad
 
-#include <Wire.h>
-#include <PCF8574.h>
-
-#define KEYPAD_ADDRESS 0x20
-
-PCF8574 keypad(KEYPAD_ADDRESS);
-
-const byte ROWS = 4; // Four rows
-const byte COLS = 3; // Three columns
-
-char keys[ROWS][COLS] = {
-  {'1', '2', '3'},
-  {'4', '5', '6'},
-  {'7', '8', '9'},
-  {'*', '0', '#'}
-};
-
-// Define pin numbers corresponding to PCF8574T pins
-byte rowPins[ROWS] = {6, 5, 4, 3}; // P0 to P3
-byte colPins[COLS] = {2, 1, 0};    // P4 to P6
-
-// Variables for debouncing
-unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 50; // 50 milliseconds debounce delay
-
-// Store the previous state of each key
-bool previousKeyState[ROWS][COLS] = {false};
-
-void setup() {
-  Serial.begin(115200);
+void keypadSetup() {
   Wire.begin();
   keypad.begin();
   
@@ -68,7 +39,8 @@ char getKey() {
   return '\0'; // No key pressed
 }
 
-void loop() {
+//Print keypad input if available
+void printKeyLoop() {
   char key = getKey();
   if (key) {
     Serial.print("Key pressed: ");
